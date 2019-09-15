@@ -2,4 +2,4 @@
 
 'use strict'
 
-require('./src/bin.js')(require('./src'))
+require('./src/bin.js')(require('./src/server'))

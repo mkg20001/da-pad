@@ -2,7 +2,7 @@
   "name": "da-pad",
   "version": "0.0.1",
   "description": "A really simple CRDT-based meeting-note editor",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "parcel public/index.html",
@@ -16,14 +16,22 @@
   "author": "Maciej Krüger <mkg20001@gmail.com>",
   "license": "GPL-3.0",
   "dependencies": {
+    "@babel/plugin-syntax-async-generators": "^7.2.0",
     "@hapi/hapi": "^18.4.0",
     "@hapi/inert": "^5.2.2",
+    "@hapi/nes": "^11.2.2",
     "catbox-mongodb": "^4.2.1",
+    "delta-crdts": "^0.10.2",
     "hapi-pino": "^6.1.0",
     "hapi-sentry": "^2.0.3",
     "hapi-spa-serve": "^0.1.1",
     "mongoose": "^5.7.1",
     "parcel": "^1.12.3",
-    "relish": "^3.0.0"
+    "relish": "^3.0.0",
+    "whatwg-fetch": "^3.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.6.0",
+    "@babel/plugin-transform-runtime": "^7.6.0"
   }
 }
