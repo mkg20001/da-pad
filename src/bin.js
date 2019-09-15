@@ -9,7 +9,7 @@ module.exports = (init) => {
   const fs = require('fs')
   const path = require('path')
 
-  const confPath = [path.join(process.cwd(), 'config.yaml'), '/etc/lets-meet-online.yaml'].filter(p => fs.existsSync(p))[0]
+  const confPath = [path.join(process.cwd(), 'config.yaml'), '/etc/da-pad.yaml'].filter(p => fs.existsSync(p))[0]
 
   if (!confPath) {
     throw new Error('No config found!')

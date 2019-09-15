@@ -12,5 +12,16 @@
     "meeting"
   ],
   "author": "Maciej Krüger <mkg20001@gmail.com>",
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "dependencies": {
+    "@hapi/hapi": "^18.4.0",
+    "@hapi/inert": "^5.2.2",
+    "catbox-mongodb": "^4.2.1",
+    "hapi-pino": "^6.1.0",
+    "hapi-sentry": "^2.0.3",
+    "hapi-spa-serve": "^0.1.1",
+    "mongoose": "^5.7.1",
+    "parcel": "^1.12.3",
+    "relish": "^3.0.0"
+  }
 }

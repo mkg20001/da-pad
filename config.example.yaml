@@ -1,0 +1,4 @@
+hapi:
+  host: '::'
+  port: 5433
+mongodb: 'mongodb://localhost:27017/da-pad'
