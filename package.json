@@ -1,0 +1,16 @@
+{
+  "name": "da-pad",
+  "version": "0.0.1",
+  "description": "A really simple CRDT-based meeting-note editor",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "crdt",
+    "pad",
+    "meeting"
+  ],
+  "author": "Maciej Krüger <mkg20001@gmail.com>",
+  "license": "GPL-3.0"
+}
