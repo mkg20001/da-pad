@@ -23,6 +23,7 @@
     "@hapi/hapi": "^18.4.0",
     "@hapi/inert": "^5.2.2",
     "@hapi/nes": "^11.2.2",
+    "deep-diff": "^1.0.2",
     "delta-crdts": "^0.10.2",
     "hapi-pino": "^6.1.0",
     "hapi-sentry": "^2.0.3",
@@ -36,7 +37,11 @@
     "whatwg-fetch": "^3.0.0"
   },
   "nodemonConfig": {
-    "ignore": ["dist/*", ".*cache/*", "public/*"],
+    "ignore": [
+      "dist/*",
+      ".*cache/*",
+      "public/*"
+    ],
     "delay": "2500",
     "exec": "node bin.js | pino-pretty"
   },

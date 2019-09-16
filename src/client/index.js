@@ -5,6 +5,7 @@ const Nes = require('@hapi/nes/lib/client')
 const {crdtType, mergeDeltas, Cencode, Cdecode} = require('../crdt')
 const $ = require('jquery')
 require('./onchange-plugin')($)
+// const diff = require('deep-diff')
 
 // TODO: split into files
 
@@ -16,11 +17,14 @@ module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
   }
 
   const renderer = Renderer(_renderer, crdt, {
-    onContentChange: (oldContentTree, newContentTree) => {
+    /* onContentChange: (oldContentTree, newContentTree) => {
       const delta = calculateDelta(oldContentTree, newContentTree)
       crdt.apply(delta)
       sync.send.delta(delta)
       renderer.onChange()
+    }, */
+    onDelta: (delta) => {
+      sync.send.delta(delta)
     },
     onCursorChange: (newPos) => {
       sync.send.cursor(newPos)
@@ -58,7 +62,7 @@ function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
   field.wysiwygEvt()
 
   function contentTreeify (field) { // div's a line, span's a change. direct text nodes of diff need to be converted to a span.
-    field.children().toArray().map(e => $(e)).map(e => {
+    return field.children().toArray().map(e => $(e)).map(e => {
       return e.contents().toArray().map(t => {
         let node
         let te = $(t)
@@ -67,17 +71,36 @@ function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
           node = {author: 'selfFIXME', content: t.data}
           $(renderNode(node)).insertBefore(t)
           te.remove()
-        } else {
+        } else if (t.nodeName === 'SPAN') {
           node = {author: te.data('author'), content: te.text()}
         }
 
         return node
-      })
+      }).filter(Boolean)
     })
   }
 
-  function calculateTreeDiff (current, incoming) {
+  function calculateTreeDiff (oldTree, newTree) {
+    console.log(diff(oldTree, newTree))
+  }
 
+  function calculateTreeDelta (oldTree, newTree) {
+    /* diff(oldTree, newTree).forEach(d => {
+      switch (d.type) {
+        case 'E': { // we need to rip off some nodes then re-add them without the removed content
+          break
+        }
+        case 'D': { // we need to remove stuff from the crdt at the right point
+          break
+        }
+        case 'A': { // we need to add stuff at the crdt at the right point
+          break
+        }
+        default: {
+          throw new TypeError('diff invalid, report')
+        }
+      }
+    }) */
   }
 
   function applyTreeDiff (diff) {
@@ -88,8 +111,14 @@ function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
     return `<span data-author="${escape(node.author)}" style="background: ${authorToRGBA(node.author)}">${escape(node.content)}</span>`
   }
 
+  let oldTree = []
+
   field.on('change', () => {
-    console.log(contentTreeify(field))
+    let newTree = contentTreeify(field)
+    console.log(oldTree, newTree)
+    const diff = calculateTreeDiff(oldTree, newTree)
+    console.log('out', diff)
+    oldTree = newTree
   })
 
   // TODO: input from user handle
