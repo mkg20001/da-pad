@@ -4,9 +4,9 @@ const Sequelize = require('sequelize')
 const Op = Sequelize.Op
 const Joi = require('@hapi/joi')
 
-const {crdtType, mergeDeltas, verifyValues, Cencode, Cdecode} = require('./crdt')
+const {crdtType, crdt, mergeDeltas, verifyValues, Cencode, Cdecode} = require('./crdt')
 
-module.exports = async (server, sequelize, config) => {
+module.exports = async (server, sequelize, config) => { // TODO: add canViewPad, canEditPad
   class Delta extends Sequelize.Model {}
   Delta.init({
     id: {
@@ -114,4 +114,34 @@ module.exports = async (server, sequelize, config) => {
       }
     }
   })
+
+  return {
+    create: async (id, initialContent) => {
+      // TODO: check if already exists
+
+      const pad = crdt(id)
+      initialContent = initialContent.split('\n').reduce((list, line) => {
+        list.push(
+          {author: 'System', content: line},
+          {author: 'System', content: '\n'}
+        )
+      }, [])
+
+      const initialDelta = pad.insertAllAt(0, initialContent)
+
+      return Delta.create({
+        padId: id,
+        authorId: 'system',
+        delta: Cencode(initialDelta),
+        deltaId: 1
+      })
+    },
+    delete: async (id) => {
+      return Delta.destroy({
+        where: {
+          padId: id
+        }
+      })
+    }
+  }
 }
