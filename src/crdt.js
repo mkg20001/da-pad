@@ -64,5 +64,11 @@ module.exports = (padId, authorId) => {
     }
   } */
 
-  return rga(padId)
+  const set = rga(padId)
+
+  return {
+    appendText: (text) => {
+      return set.push({author: 'test'})
+    }
+  }
 }

@@ -25,6 +25,7 @@
     "hapi-pino": "^6.1.0",
     "hapi-sentry": "^2.0.3",
     "hapi-spa-serve": "^0.1.1",
+    "jquery": "^3.4.1",
     "mongoose": "^5.7.1",
     "parcel": "^1.12.3",
     "relish": "^3.0.0",
