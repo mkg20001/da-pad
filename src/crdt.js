@@ -62,6 +62,7 @@ const Document = {
   mutators: {
     createLineAfter (id, state, after) {
       const lid = genLineId()
+
       return {
         lines: rga.mutators.addRight(id, state.lines, after, lid),
         lineIds: {
@@ -109,8 +110,7 @@ CRDT.define('Document', Document)
 const crdtType = CRDT('Document')
 
 function mergeDeltas (deltas) {
-  const tmpCrdt = crdtType(Math.random())
-  return deltas.reduce(tmpCrdt.join, tmpCrdt.initial())
+  return deltas.filter(Boolean).reduce(Document.join, Document.initial())
 }
 
 module.exports = {

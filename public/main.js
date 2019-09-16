@@ -6,7 +6,7 @@ if (!window.fetch) {
   require('whatwg-fetch')
 }
 
-let padId = window.location.hash
+let padId = window.location.hash.replace(/#/g, '')
 
 if (!padId) {
   window.location.hash = padId = Math.random()
@@ -19,7 +19,7 @@ function localStorageWithPrefix (prefix) {
     get: (key, def) => {
       const val = ls.getItem(`${prefix}.${key}`)
 
-      if (val == null) {
+      if (val == null || val === 'undefined') {
         return def
       } else {
         return JSON.parse(val)

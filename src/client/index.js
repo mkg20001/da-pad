@@ -4,6 +4,8 @@ const Nes = require('@hapi/nes/lib/client')
 const {crdtType, mergeDeltas} = require('../crdt')
 const $ = require('jquery')
 
+// TODO: split into files
+
 module.exports = ({authorId, padId}, _renderer, _sync, storage) => {
   const crdt = crdtType(padId)
 
@@ -123,9 +125,9 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
     unsyncedState = unsyncedState.reduce((s1, s2) => {
       return {
         cursor: (s2.cursor || s1.cursor),
-        delta: s1.delta && s2.delta ? mergeDeltas(s1.delta, s2.delta) : (s2.delta || s1.delta)
+        delta: s1.delta && s2.delta ? mergeDeltas([s1.delta, s2.delta]) : (s2.delta || s1.delta)
       }
-    })
+    }, {})
     await save()
   }
 
@@ -146,7 +148,7 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
   async function doCompleteSync () {
     const delta = await client.request(`${padUrl}/fetch-delta-changes/${lastSyncDeltaId}`)
     lastSyncDeltaId = delta.id
-    lastSyncState = mergeDeltas(lastSyncState, delta.delta)
+    lastSyncState = mergeDeltas([lastSyncState, delta.delta])
     await save()
     onDelta(delta)
   }
@@ -156,7 +158,7 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
       await doCompleteSync()
     } else {
       lastSyncDeltaId++
-      lastSyncState = mergeDeltas(lastSyncState, delta.delta)
+      lastSyncState = mergeDeltas([lastSyncState, delta.delta])
       await save()
       await onDelta(delta.delta)
     }
