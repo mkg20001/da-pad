@@ -2,8 +2,9 @@
 
 const Sequelize = require('sequelize')
 const Op = Sequelize.Op
+const Joi = require('@hapi/joi')
 
-const {crdtType, mergeDeltas, verifyValues} = require('./crdt')
+const {crdtType, mergeDeltas, verifyValues, Cencode, Cdecode} = require('./crdt')
 
 module.exports = async (server, sequelize, config) => {
   class Delta extends Sequelize.Model {}
@@ -18,7 +19,8 @@ module.exports = async (server, sequelize, config) => {
 
     authorId: Sequelize.STRING,
 
-    delta: Sequelize.JSONB,
+    // delta: Sequelize.JSONB,
+    delta: Sequelize.STRING,
     deltaId: Sequelize.INTEGER,
 
     createdAt: {
@@ -28,14 +30,22 @@ module.exports = async (server, sequelize, config) => {
     }
   }, { sequelize, modelName: 'deltas' })
 
-  await sequelize.sync()
-
   server.subscription('/_da-pad/{padId}/sub/cursor')
   server.subscription('/_da-pad/{padId}/sub/delta')
 
   server.route({
     method: 'GET',
     path: '/_da-pad/{padId}/fetch-delta-changes/{from}',
+
+    options: {
+      validate: {
+        params: {
+          padId: Joi.string().required(),
+          from: Joi.number().integer().min(0).default(0)
+        }
+      }
+    },
+
     handler: async (request, h) => {
       // SELECT id, authorId, content FROM deltas WHERE id < from ORDER BY id ASC
       const res = await Delta.findAll({
@@ -51,7 +61,7 @@ module.exports = async (server, sequelize, config) => {
       })
 
       return {
-        delta: mergeDeltas(res),
+        delta: Cencode(mergeDeltas(res)),
         lastId: res.length ? res.pop().deltaId : request.params.from
       }
     }
@@ -68,13 +78,14 @@ module.exports = async (server, sequelize, config) => {
 
       const authorId = 'test'
 
-      const {cursor, delta} = request.body
+      let {cursor, delta} = request.body
 
       if (cursor) {
         server.publish(`${padUrl}/cursor`, { author: authorId, cursor })
       }
 
       if (delta) {
+        delta = Cdecode(delta)
         verifyValues(delta, authorId)
 
         // TODO: acid or put this directly on server

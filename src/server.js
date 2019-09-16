@@ -46,6 +46,8 @@ const init = async (config) => {
 
   await require('./api')(server, sequelize, config)
 
+  await sequelize.sync()
+
   await server.start()
 }
 

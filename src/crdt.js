@@ -33,8 +33,12 @@ function verifyValues (diff, ensureAuthor) {
   })
 }
 
+const codec = require('delta-crdts-msgpack-codec') // TODO: switch to non-binary codec
+
 module.exports = {
   crdtType,
   mergeDeltas,
-  verifyValues
+  verifyValues,
+  Cencode: (d) => codec.encode(d).toString('base64'),
+  Cdecode: (d) => codec.decode(Buffer.from(d, 'base64'))
 }

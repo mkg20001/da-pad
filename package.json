@@ -35,6 +35,11 @@
     "sequelize": "^5.18.4",
     "whatwg-fetch": "^3.0.0"
   },
+  "nodemonConfig": {
+    "ignore": ["dist/*", ".*cache/*", "public/*"],
+    "delay": "2500",
+    "exec": "node bin.js | pino-pretty"
+  },
   "devDependencies": {
     "@babel/core": "^7.6.0",
     "@babel/plugin-transform-runtime": "^7.6.0",

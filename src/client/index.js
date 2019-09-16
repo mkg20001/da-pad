@@ -1,7 +1,7 @@
 'use strict'
 
 const Nes = require('@hapi/nes/lib/client')
-const {crdtType, mergeDeltas} = require('../crdt')
+const {crdtType, mergeDeltas, Cencode, Cdecode} = require('../crdt')
 const $ = require('jquery')
 
 // TODO: split into files
@@ -108,11 +108,22 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
   let lastSyncDeltaId = await get('lastSyncedDeltaId', 0)
   let lastSyncState = await get('lastSyncedState')
   let unsyncedState = await get('unsyncedState', [])
+  unsyncedState = unsyncedState.map(s => {
+    return {
+      cursor: s.cursor,
+      delta: s.delta ? Cdecode(s.delta) : null
+    }
+  })
 
   async function save () {
     await set('lastSyncedDeltaId', lastSyncDeltaId)
     await set('lastSyncState', lastSyncState)
-    await set('unsyncedState', unsyncedState)
+    await set('unsyncedState', unsyncedState.map(s => {
+      return {
+        cursor: s.cursor,
+        delta: s.delta ? Cencode(s.delta) : null
+      }
+    }))
   }
 
   const client = new Nes.Client(`ws://${padServer}`)
@@ -159,7 +170,8 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
 
   async function doCompleteSync () {
     const res = await client.request(`${padUrl}/fetch-delta-changes/${lastSyncDeltaId}`)
-    const {delta, lastId} = res.payload
+    let {delta, lastId} = res.payload
+    delta = Cdecode(delta)
     lastSyncDeltaId = lastId
     lastSyncState = mergeDeltas([lastSyncState, delta])
     await save()
@@ -167,11 +179,12 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
   }
 
   client.subscribe(`${padUrl}/sub/delta`, async (delta) => {
-    if (delta.id !== lastSyncDeltaId + 1) {
+    if (delta.deltaId !== lastSyncDeltaId + 1) {
       await doCompleteSync()
     } else {
       lastSyncDeltaId++
-      lastSyncState = mergeDeltas([lastSyncState, delta.delta])
+      delta = Cdecode(delta.delta)
+      lastSyncState = mergeDeltas([lastSyncState, delta])
       await save()
       await onDelta(delta.delta)
     }
