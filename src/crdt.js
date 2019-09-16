@@ -1,31 +1,8 @@
 'use strict'
 
-/*
-
-State looks like this:
-  {author: 'name', line: '', beforeLine: '', afterLine: '', text: '', beforeText: '', afterText: ''}
-
-*/
-
-/*
-
-Document {
-  lineIds: RGA(),
-  lines: {
-    $id: RGA(text)
-  }
-}
-
-Text {
-  author "authorId"
-  content "someString"
-}
-
-*/
-
 const CRDT = require('delta-crdts')
 
-module.exports = (padId, authorId) => {
+module.exports = () => {
   /*
 
   Document#RGA {
@@ -78,37 +55,13 @@ module.exports = (padId, authorId) => {
       deleteLineAt (id) {
 
       },
-      appendLine (id, state, arg1) {
-        // example mutator, returning a delta
-        return 0
+      appendLine (lineId, textId, state) {
+
       }
     }
   }
 
-  /* const DocumentWithAuthors = {
-    initial: () => {
-      return {
-        lineIds: rga(padId + '#')
-      }
-    },
-    join: (s1, s2) => {
+  CRDT.Define('Document', Document)
 
-    },
-    value: (state) => state,
-    mutators: {
-      appendLine (beforeLine) => {
-
-      }
-    }
-  } */
-
-  /* const set = rga(padId)
-
-  return {
-    appendText: (text) => {
-      return set.push({author: 'test'})
-    }
-  } */
-
-  return rga
+  return CRDT('Document')
 }
