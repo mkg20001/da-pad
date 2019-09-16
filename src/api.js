@@ -28,7 +28,7 @@ module.exports = async (server, sequelize, config) => {
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       allowNull: false
     }
-  }, { sequelize, modelName: 'deltas' })
+  }, { sequelize, modelName: 'delta' })
 
   server.subscription('/_da-pad/{padId}/sub/cursor')
   server.subscription('/_da-pad/{padId}/sub/delta')

@@ -7,6 +7,18 @@ const $ = require('jquery')
 require('./onchange-plugin')($)
 // const diff = require('deep-diff')
 
+const crypto = require('crypto')
+const genNodeId = () => crypto.randomBytes(8).toString('hex')
+
+/*
+@deltaIn:
+  - new delta comes in
+  - calculate current delta
+  - apply current
+  - apply diff tree via new
+  - apply new
+*/
+
 // TODO: split into files
 
 module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
@@ -49,8 +61,15 @@ module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
 
 const KEEP_CURSORS = 10 * 1000 // keep un-updated cursor for 10s
 
+const RGBA_CACHE = {}
+
 function authorToRGBA (author) {
-  return `rgba(0, 0, 0, .6)` // TODO: make colors random
+  if (!RGBA_CACHE[author]) {
+    let hash = crypto.createHash('sha1').update(author).digest('hex')
+    return (RGBA_CACHE[author] = `rgba(${parseInt(hash.substr(0, 2), 16)}, ${parseInt(hash.substr(2, 4), 16)}, ${parseInt(hash.substr(4, 6), 16)}, 0.16)`)
+  } else {
+    return RGBA_CACHE[author]
+  }
 }
 
 function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
@@ -68,11 +87,11 @@ function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
         let te = $(t)
 
         if (t.nodeType === 3) {
-          node = {author: 'selfFIXME', content: t.data}
+          node = {author: 'selfFIXME', content: t.data, nodeId: genNodeId()}
           $(renderNode(node)).insertBefore(t)
           te.remove()
         } else if (t.nodeName === 'SPAN') {
-          node = {author: te.data('author'), content: te.text()}
+          node = {author: te.data('author'), content: te.text(), nodeId: te.data('nodeid')}
         }
 
         return node
@@ -81,7 +100,8 @@ function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
   }
 
   function calculateTreeDiff (oldTree, newTree) {
-    console.log(diff(oldTree, newTree))
+    // console.log(diff(oldTree, newTree))
+
   }
 
   function calculateTreeDelta (oldTree, newTree) {
@@ -101,6 +121,7 @@ function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
         }
       }
     }) */
+
   }
 
   function applyTreeDiff (diff) {
@@ -108,7 +129,7 @@ function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
   }
 
   function renderNode (node) {
-    return `<span data-author="${escape(node.author)}" style="background: ${authorToRGBA(node.author)}">${escape(node.content)}</span>`
+    return `<span data-nodeid="${escape(node.nodeId)}" data-author="${escape(node.author)}" style="background: ${authorToRGBA(node.author)}">${escape(node.content)}</span>`
   }
 
   let oldTree = []
@@ -281,31 +302,23 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
   }
 }
 
-/*
+function localStorageWithPrefix (prefix) {
+  const ls = window.localStorage
 
-const crdt = CRDT(authorId, padId)
+  return {
+    get: (key, def) => {
+      const val = ls.getItem(`${prefix}.${key}`)
 
-let cursors = {} // author => {time, pos}
-
-const field = $(htmlField)
-
-function escape (str) {
-  return str // TODO: SECURITY!!!11
+      if (val == null || val === 'undefined') {
+        return def
+      } else {
+        return JSON.parse(val)
+      }
+    },
+    set: (key, val) => {
+      return ls.setItem(`${prefix}.${key}`, JSON.stringify(val))
+    }
+  }
 }
 
-const padUrl = `_da-pad/sub/${padId}`
-
-const initialState = await client.request(`${padUrl}/fetch-delta-changes/${deltaId}`)
-
-crdt.apply(initialState)
-
-client.subscribe(`${padUrl}/delta`, (delta) => {
-  crdt.apply(delta)
-  prepareRenderState()
-})
-
-client.subscribe(`${padUrl}/cursor`, (author, pos) => {
-  cursors[author] = {time: Date.now(), pos}
-  prepareRenderState()
-})
-*/
+module.exports.localStorage = localStorageWithPrefix
