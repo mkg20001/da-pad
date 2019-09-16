@@ -4,7 +4,7 @@ const Nes = require('@hapi/nes')
 const CRDT = require('../crdt')
 const $ = require('jquery')
 
-module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
+module.exports = ({authorId, padId}, _renderer, _sync, storage) => {
   const crdtType = CRDT(authorId)
   const crdt = crdtType(padId)
 
@@ -23,15 +23,19 @@ module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
       sync.send.cursor(newPos)
     }
   })
+
   const sync = SyncController(_sync, storage, crdtType, padId, {
-    onDelta: (delta) => { // this will yield the initial deltas as well
+    onDelta: (delta) => { // NOTE: this is main()! this will yield the initial deltas as well.
       crdt.apply(delta)
     },
     onCursor: (data) => {
       renderer.onCursorChange(data)
     },
-    onConnectionStatusChange: (isOnline) => {
+    onConnectionStatusChange: (state, safeToEdit) => {
       // TODO: add
+      // state: 0=offline, 1=syncing, 2=online/up-to-date
+      // safeToEdit: when loading a pad for the first time, it's not safe to edit until the first change comes in
+      renderer.onConnectionStatus(state, safeToEdit)
     }
   })
 }
