@@ -13,6 +13,9 @@
     "pad",
     "meeting"
   ],
+  "browser": {
+    "src/index.js": "./src/client/index.js"
+  },
   "author": "Maciej Krüger <mkg20001@gmail.com>",
   "license": "GPL-3.0",
   "dependencies": {
@@ -28,7 +31,10 @@
     "jquery": "^3.4.1",
     "mongoose": "^5.7.1",
     "parcel": "^1.12.3",
+    "pg": "^7.12.1",
+    "pg-hstore": "^2.3.3",
     "relish": "^3.0.0",
+    "sequelize": "^5.18.4",
     "whatwg-fetch": "^3.0.0"
   },
   "devDependencies": {

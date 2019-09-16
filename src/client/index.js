@@ -1,6 +1,6 @@
 'use strict'
 
-const Nes = require('@hapi/nes')
+const Nes = require('@hapi/nes/lib/client')
 const CRDT = require('../crdt')
 const $ = require('jquery')
 
@@ -104,7 +104,7 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
 
   const client = new Nes.Client(`ws://${padServer}`)
 
-  const padUrl = `_da-pad/sub/${padId}`
+  const padUrl = `/_da-pad/${padId}`
 
   function mergeDeltas (deltas) {
     const tmpCrdt = crdtType(Math.random())
@@ -155,7 +155,7 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
     onDelta(delta)
   }
 
-  client.subscribe(`${padUrl}/delta`, async (delta) => {
+  client.subscribe(`${padUrl}/sub/delta`, async (delta) => {
     if (delta.id !== lastSyncDeltaId + 1) {
       await doCompleteSync()
     } else {
@@ -166,7 +166,7 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
     }
   })
 
-  client.subscribe(`${padUrl}/cursor`, (data) => {
+  client.subscribe(`${padUrl}/sub/cursor`, (data) => {
     onCursor(data)
   })
 

@@ -1,6 +1,6 @@
 'use strict'
 
-const client = require('..').Client
+const client = require('../src/client')
 
 if (!window.fetch) {
   require('whatwg-fetch')
