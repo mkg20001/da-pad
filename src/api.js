@@ -3,7 +3,7 @@
 const Sequelize = require('sequelize')
 const Op = Sequelize.Op
 
-const {crdtType, mergeDeltas} = require('./crdt')
+const {crdtType, mergeDeltas, verifyValues} = require('./crdt')
 
 module.exports = async (server, sequelize, config) => {
   class Delta extends Sequelize.Model {}
@@ -62,7 +62,6 @@ module.exports = async (server, sequelize, config) => {
     path: '/_da-pad/{padId}/sync',
     handler: async (request, h) => {
       // TODO: determine author propertly
-      // TODO: validate incoming data
 
       const {padId} = request.params
       const padUrl = `/_da-pad/${padId}/sub`
@@ -76,6 +75,8 @@ module.exports = async (server, sequelize, config) => {
       }
 
       if (delta) {
+        verifyValues(delta, authorId)
+
         // TODO: acid or put this directly on server
         const prev = await Delta.findAll({
           where: {

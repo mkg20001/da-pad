@@ -53,9 +53,9 @@ function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
 
   // TODO: input from user handle
 
-  function renderState (state, cursors) { // TODO: add cursor support
+  function renderState (lines, cursors) { // TODO: add cursor support
     return `<div class="da-pad">
-    ${state.lines.map(line =>
+    ${lines.map(line =>
     `<div class="line">
         ${line.map(change => `<div class="change" style="background: ${authorToRGBA(change.author)}">${escape(change.text)}</div>`)}
         </div>`
@@ -73,7 +73,19 @@ function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
       }
     }
 
-    return renderState(crdt.state(), _cursors)
+    const lines = crdt
+      .state()
+      .reduce((lines, node) => {
+        if (node.content === '\n') {
+          lines.push([])
+        } else {
+          lines[lines.length - 1].push(node)
+        }
+
+        return lines
+      }, [[]])
+
+    return renderState(lines, _cursors)
   }
 
   function reRender () {
