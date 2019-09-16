@@ -3,6 +3,8 @@
 const Sequelize = require('sequelize')
 const Op = Sequelize.Op
 
+const {crdtType, mergeDeltas} = require('./crdt')
+
 module.exports = async (server, sequelize, config) => {
   class Delta extends Sequelize.Model {}
   Delta.init({
@@ -36,7 +38,7 @@ module.exports = async (server, sequelize, config) => {
     path: '/_da-pad/{padId}/fetch-delta-changes/{from}',
     handler: async (request, h) => {
       // SELECT id, authorId, content FROM deltas WHERE id < from ORDER BY id ASC
-      return Delta.findAll({
+      const res = await Delta.findAll({
         where: {
           padId: request.params.padId,
           deltaId: {
@@ -47,6 +49,11 @@ module.exports = async (server, sequelize, config) => {
           ['deltaId', 'ASC']
         ]
       })
+
+      return {
+        delta: mergeDeltas(res),
+        lastId: res.length ? res.pop().deltaId : request.params.from
+      }
     }
   })
 

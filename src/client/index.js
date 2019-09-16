@@ -6,7 +6,7 @@ const $ = require('jquery')
 
 // TODO: split into files
 
-module.exports = ({authorId, padId}, _renderer, _sync, storage) => {
+module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
   const crdt = crdtType(padId)
 
   function calculateDelta (oldContentTree, newContentTree) {
@@ -25,7 +25,7 @@ module.exports = ({authorId, padId}, _renderer, _sync, storage) => {
     }
   })
 
-  const sync = SyncController(_sync, storage, crdtType, padId, {
+  const sync = await SyncController(_sync, storage, crdtType, padId, {
     onDelta: (delta) => { // NOTE: this is main()! this will yield the initial deltas as well.
       crdt.apply(delta)
     },
@@ -146,9 +146,10 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
   // TODO: locks for crdt sync incoming
 
   async function doCompleteSync () {
-    const delta = await client.request(`${padUrl}/fetch-delta-changes/${lastSyncDeltaId}`)
-    lastSyncDeltaId = delta.id
-    lastSyncState = mergeDeltas([lastSyncState, delta.delta])
+    const res = await client.request(`${padUrl}/fetch-delta-changes/${lastSyncDeltaId}`)
+    const {delta, lastId} = res.payload
+    lastSyncDeltaId = lastId
+    lastSyncState = mergeDeltas([lastSyncState, delta])
     await save()
     onDelta(delta)
   }
@@ -168,7 +169,7 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
     onCursor(data)
   })
 
-  if (!lastSyncDeltaId) {
+  if (!lastSyncDeltaId || !lastSyncState) {
     await doCompleteSync()
   } else {
     onDelta(mergeDeltas([lastSyncState].concat(unsyncedState.map(s => s.delta).filter(Boolean))))

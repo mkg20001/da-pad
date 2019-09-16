@@ -44,9 +44,16 @@ const Document = {
 
     const del = s1.delLineIds.concat(s2.delLineIds)
 
-    for (const id in s1.lineIds) { // eslint-disable-line guard-for-in
+    let _u = {}
+    del.forEach(d => (_u[d] = true))
+    const ids = Object.keys(s1.lineIds).concat(Object.keys(s2.lineIds)).filter(id => {
+      if (_u[id]) return
+      return (_u[id] = true)
+    })
+
+    ids.forEach(id => {
       sn.lineIds[id] = merge2rga(s1.lineIds[id], s2.lineIds[id])
-    }
+    })
 
     del.forEach(id => {
       delete sn.lineIds[id]
@@ -74,6 +81,10 @@ const Document = {
     deleteLineAt (id, state, at) {
       const lid = rga.value(state.lines)[at]
 
+      if (!lid) {
+        throw new Error('Line id out of bounds')
+      }
+
       return {
         lines: rga.mutators.deleteAt(id, state.lines, at),
         lineIds: {},
@@ -82,6 +93,10 @@ const Document = {
     },
     appendTextAfterText (id, state, lineId, afterTextId, content) {
       const lid = rga.value(state.lines)[lineId]
+
+      if (!lid) {
+        throw new Error('Line id out of bounds')
+      }
 
       return {
         lines: rga.initial(),
@@ -110,7 +125,9 @@ CRDT.define('Document', Document)
 const crdtType = CRDT('Document')
 
 function mergeDeltas (deltas) {
-  return deltas.filter(Boolean).reduce(Document.join, Document.initial())
+  const d = deltas.filter(Boolean)
+  if (d.length < 2) return d[0] || Document.initial()
+  return d.reduce(Document.join, Document.initial())
 }
 
 module.exports = {
