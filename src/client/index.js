@@ -4,10 +4,13 @@ const Nes = require('@hapi/nes')
 const CRDT = require('../crdt')
 const $ = require('jquery')
 
-const KEEP_CURSORS = 10 * 1000 // keep un-updated cursor for 10s
-
 module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
-  const crdt = CRDT(authorId, padId)
+  const crdtType = CRDT(authorId)
+  const crdt = crdtType(padId)
+
+  function calculateDelta (oldContentTree, newContentTree) {
+
+  }
 
   const renderer = Renderer(_renderer, crdt, {
     onContentChange: (oldContentTree, newContentTree) => {
@@ -17,10 +20,10 @@ module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
       renderer.onChange()
     },
     onCursorChange: (newPos) => {
-      sync.send.cursorPosition(newPos)
+      sync.send.cursor(newPos)
     }
   })
-  const sync = SyncController(_sync, storage, padId, {
+  const sync = SyncController(_sync, storage, crdtType, padId, {
     onDelta: (delta) => { // this will yield the initial deltas as well
       crdt.apply(delta)
     },
@@ -31,14 +34,17 @@ module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
       // TODO: add
     }
   })
-
-  // apply everything
-  crdt.apply(lastSyncState)
-  unsyncedState.forEach(delta => crdt.apply(delta))
 }
 
-function Renderer ({htmlField}, {onContentChange, onCursorChange}) {
+const KEEP_CURSORS = 10 * 1000 // keep un-updated cursor for 10s
+
+function authorToRGBA (author) {
+  return `rgba(0, 0, 0, .6)` // TODO: make colors random
+}
+
+function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
   const field = $(htmlField)
+  const cursors = {}
 
   // TODO: input from user handle
 
@@ -52,7 +58,7 @@ function Renderer ({htmlField}, {onContentChange, onCursorChange}) {
     </div>`
   }
 
-  function prepareRenderState (state, cursors) {
+  function prepareRenderState () {
     let _cursors = {}
     for (const author in cursors) {
       if (Date.now() - cursors[author].time > KEEP_CURSORS) {
@@ -61,35 +67,120 @@ function Renderer ({htmlField}, {onContentChange, onCursorChange}) {
         _cursors[cursors[author].pos] = author
       }
     }
+
+    return renderState(crdt.state(), _cursors)
+  }
+
+  function reRender () {
+    field.html(prepareRenderState())
+  }
+
+  return {
+    onCursor: ({author, pos}) => {
+      cursors[author] = {time: Date.now(), pos}
+      reRender()
+    },
+    onChange: () => {
+      reRender()
+    }
   }
 }
 
-async function SyncController ({padServer, serverAuth}, {get, set}, padId, {onDelta, onCursor, onConnectionStatusChange}) {
+async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, padId, {onDelta, onCursor, onConnectionStatusChange}) {
   // get stuff from storage
-  const lastSyncDeltaId = await get('lastSyncedDeltaId', 0)
-  const lastSyncState = await get('lastSyncedState', crdt.initial())
-  const unsyncedState = await get('unsyncedState', [])
+  let lastSyncDeltaId = await get('lastSyncedDeltaId', 0)
+  let lastSyncState = await get('lastSyncedState')
+  let unsyncedState = await get('unsyncedState', [])
+
+  async function save () {
+    await set('lastSyncedDeltaId', lastSyncDeltaId)
+    await set('lastSyncState', lastSyncState)
+    await set('unsyncedState', unsyncedState)
+  }
 
   const client = new Nes.Client(`ws://${padServer}`)
 
   const padUrl = `_da-pad/sub/${padId}`
 
-  /* const initialState = await client.request(`${padUrl}/fetch-delta-changes/${deltaId}`)
+  function mergeDeltas (deltas) {
+    const tmpCrdt = crdtType(Math.random())
+    return deltas.reduce(tmpCrdt.join, tmpCrdt.initial())
+  }
 
-  crdt.apply(initialState) */
+  async function doSyncQueue () {
+    await reduceQueue()
 
-  client.subscribe(`${padUrl}/delta`, (delta) => {
-    crdt.apply(delta)
-    prepareRenderState()
+    try {
+      // TODO: add POST `${padUrl}/sync` unsyncedState[0]
+    } catch (err) {
+      console.error(err)
+      return doSyncQueue()
+    }
+  }
+
+  async function reduceQueue () {
+    // reduce: cursor(s1, s2) => s2, delta(s1, s2) => mergeDeltas(s1, s2) where s2 is newer
+    unsyncedState = unsyncedState.reduce((s1, s2) => {
+      return {
+        cursor: (s2.cursor || s1.cursor),
+        delta: s1.delta && s2.delta ? mergeDeltas(s1.delta, s2.delta) : (s2.delta || s1.delta)
+      }
+    })
+    await save()
+  }
+
+  let currentSyncLock
+
+  async function syncQueue (todo) {
+    // something that processes the entire queue as batch to server
+    unsyncedState.push(todo) // this does not need to be .save()'d, since we're doing that over in reduceQueue()
+    if (!currentSyncLock) {
+      currentSyncLock = doSyncQueue()
+    }
+
+    return currentSyncLock
+  }
+
+  // TODO: locks for crdt sync incoming
+
+  async function doCompleteSync () {
+    const delta = await client.request(`${padUrl}/fetch-delta-changes/${lastSyncDeltaId}`)
+    lastSyncDeltaId = delta.id
+    lastSyncState = mergeDeltas(lastSyncState, delta.delta)
+    await save()
+    onDelta(delta)
+  }
+
+  client.subscribe(`${padUrl}/delta`, async (delta) => {
+    if (delta.id !== lastSyncDeltaId + 1) {
+      await doCompleteSync()
+    } else {
+      lastSyncDeltaId++
+      lastSyncState = mergeDeltas(lastSyncState, delta.delta)
+      await save()
+      await onDelta(delta.delta)
+    }
   })
 
-  client.subscribe(`${padUrl}/cursor`, (author, pos) => {
-    cursors[author] = {time: Date.now(), pos}
-    prepareRenderState()
+  client.subscribe(`${padUrl}/cursor`, (data) => {
+    onCursor(data)
   })
 
   if (!lastSyncDeltaId) {
-    await doSyncup()
+    await doCompleteSync()
+  } else {
+    onDelta(mergeDeltas([lastSyncState].concat(unsyncedState.map(s => s.delta).filter(Boolean))))
+  }
+
+  return {
+    send: {
+      cursor: async (cursor) => {
+        return syncQueue({cursor})
+      },
+      delta: async (delta) => {
+        return syncQueue({delta})
+      }
+    }
   }
 }
 
