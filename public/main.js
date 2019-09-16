@@ -6,10 +6,8 @@ if (!window.fetch) {
   require('whatwg-fetch')
 }
 
-let padId = window.location.hash.replace(/#/g, '')
-
-if (!padId) {
-  window.location.hash = padId = Math.random()
+if (!window.location.hash) {
+  window.location.hash = Math.random()
 }
 
 function localStorageWithPrefix (prefix) {
@@ -31,10 +29,12 @@ function localStorageWithPrefix (prefix) {
   }
 }
 
+const padId = window.location.hash.replace(/#/g, '')
+
 client(
   {
     authorId: 'TODOMAKERANDOM',
-    padId: window.location.hash
+    padId: padId
   },
   {
     htmlField: '#dapad'
@@ -43,4 +43,4 @@ client(
     padServer: window.location.host,
     serverAuth: 'TODOADDAUTH'
   },
-  localStorageWithPrefix(window.location.host))
+  localStorageWithPrefix(padId))
