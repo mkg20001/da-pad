@@ -1,8 +1,10 @@
 'use strict'
 
+require('./dapad.css')
 const Nes = require('@hapi/nes/lib/client')
 const {crdtType, mergeDeltas, Cencode, Cdecode} = require('../crdt')
 const $ = require('jquery')
+require('./onchange-plugin')($)
 
 // TODO: split into files
 
@@ -51,16 +53,54 @@ function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
   const field = $(htmlField)
   const cursors = {}
 
+  field.toggleClass('da-pad')
+  field.attr('contenteditable', true)
+  field.wysiwygEvt()
+
+  function contentTreeify (field) { // div's a line, span's a change. direct text nodes of diff need to be converted to a span.
+    field.children().toArray().map(e => $(e)).map(e => {
+      return e.contents().toArray().map(t => {
+        let node
+        let te = $(t)
+
+        if (t.nodeType === 3) {
+          node = {author: 'selfFIXME', content: t.data}
+          $(renderNode(node)).insertBefore(t)
+          te.remove()
+        } else {
+          node = {author: te.data('author'), content: te.text()}
+        }
+
+        return node
+      })
+    })
+  }
+
+  function calculateTreeDiff (current, incoming) {
+
+  }
+
+  function applyTreeDiff (diff) {
+
+  }
+
+  function renderNode (node) {
+    return `<span data-author="${escape(node.author)}" style="background: ${authorToRGBA(node.author)}">${escape(node.content)}</span>`
+  }
+
+  field.on('change', () => {
+    console.log(contentTreeify(field))
+  })
+
   // TODO: input from user handle
+  // TODO: delta-update HTML as well
 
   function renderState (lines, cursors) { // TODO: add cursor support
-    return `<div class="da-pad">
-    ${lines.map(line =>
-    `<div class="line">
-        ${line.map(change => `<div class="change" style="background: ${authorToRGBA(change.author)}">${escape(change.text)}</div>`)}
+    return lines.map(line =>
+      `<div>
+        ${line.map(renderNode)}
         </div>`
-  ).join('')}
-    </div>`
+    ).join('')
   }
 
   function prepareRenderState () {

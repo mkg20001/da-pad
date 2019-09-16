@@ -39,10 +39,10 @@ module.exports = async (server, sequelize, config) => {
 
     options: {
       validate: {
-        params: {
+        /* params: { TODO: hapi fails at it's own stuff, great
           padId: Joi.string().required(),
           from: Joi.number().integer().min(0).default(0)
-        }
+        } */
       }
     },
 
