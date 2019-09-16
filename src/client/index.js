@@ -1,11 +1,10 @@
 'use strict'
 
 const Nes = require('@hapi/nes/lib/client')
-const CRDT = require('../crdt')
+const {crdtType, mergeDeltas} = require('../crdt')
 const $ = require('jquery')
 
 module.exports = ({authorId, padId}, _renderer, _sync, storage) => {
-  const crdtType = CRDT(authorId)
   const crdt = crdtType(padId)
 
   function calculateDelta (oldContentTree, newContentTree) {
@@ -103,13 +102,10 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
   }
 
   const client = new Nes.Client(`ws://${padServer}`)
+  // await client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } })
+  await client.connect({ })
 
   const padUrl = `/_da-pad/${padId}`
-
-  function mergeDeltas (deltas) {
-    const tmpCrdt = crdtType(Math.random())
-    return deltas.reduce(tmpCrdt.join, tmpCrdt.initial())
-  }
 
   async function doSyncQueue () {
     await reduceQueue()

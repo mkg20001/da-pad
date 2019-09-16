@@ -4,7 +4,7 @@
   "description": "A really simple CRDT-based meeting-note editor",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha -A",
     "start": "parcel public/index.html",
     "build": "rm -rf dist && parcel build public/index.html"
   },
@@ -23,13 +23,11 @@
     "@hapi/hapi": "^18.4.0",
     "@hapi/inert": "^5.2.2",
     "@hapi/nes": "^11.2.2",
-    "catbox-mongodb": "^4.2.1",
     "delta-crdts": "^0.10.2",
     "hapi-pino": "^6.1.0",
     "hapi-sentry": "^2.0.3",
     "hapi-spa-serve": "^0.1.1",
     "jquery": "^3.4.1",
-    "mongoose": "^5.7.1",
     "parcel": "^1.12.3",
     "pg": "^7.12.1",
     "pg-hstore": "^2.3.3",
@@ -39,6 +37,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.6.0",
-    "@babel/plugin-transform-runtime": "^7.6.0"
+    "@babel/plugin-transform-runtime": "^7.6.0",
+    "mocha": "^6.2.0"
   }
 }
