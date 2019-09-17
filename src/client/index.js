@@ -99,47 +99,152 @@ function Renderer ({htmlField}, crdt, {onContentChange, onCursorChange}) {
     })
   }
 
-  function calculateTreeDiff (oldTree, newTree) {
-    // console.log(diff(oldTree, newTree))
+  const shadowId = Symbol('CRDT_SHADOW_ID')
+  const shadowMap = {}
 
+  window.crdt = crdt
+
+  function outgoingCrdt () {
+    let indexMap = {}
+    let lineListMap = {}
+    let lineList = []
+
+    let delta = []
+
+    let val
+    let len
+
+    const off = () => {
+      val = crdt.value()
+      len = val.length
+      val.forEach((el, i) => {
+        const shadow = el[shadowId]
+
+        indexMap[shadow] = i
+        if (el.content === '\n') {
+          lineListMap[shadow] = lineList.push(shadow) - 1
+        }
+      })
+    }
+
+    off()
+
+    let leftLine
+    field.children().toArray().map(e => {
+      let ee = $(e)
+
+      if (e.nodeName === 'DIV') {
+        let leftNode
+
+        if (!ee.data('nodeid')) {
+          let id = genNodeId()
+          let insertAt = lineList[lineListMap[leftLine] + 1]
+          if (insertAt == null) {
+            insertAt = len // at the end (TODO: use pushRight()?)
+          } else {
+            insertAt-- // so we add just _after_ the linebreak
+          }
+          delta.push(crdt.insertAt(insertAt, {author: 'fixme', content: '\n', [shadowId]: id}))
+          off()
+          ee.data('nodeid', id)
+        }
+
+        const line = ee.contents().toArray().map(t => {
+          let node
+          let te = $(t)
+
+          if (t.nodeType === 3) {
+            const id = genNodeId()
+            node = {author: 'selfFIXME', content: t.data, nodeId: id}
+
+            const obj = $(renderNode(node))
+            obj.insertBefore(t)
+
+            te.remove()
+
+            let insertAt = indexMap[leftNode] || indexMap[leftLine]
+            delta.push(crdt.insertAt(insertAt, {author: 'fixme', content: t.data, [shadowId]: id}))
+            shadowMap[id] = obj
+          } else if (t.nodeName === 'SPAN') {
+            node = {author: te.data('author'), content: te.text(), nodeId: te.data('nodeid')}
+            // TODO: check if value equal and update if not
+          }
+
+          if (node) {
+            leftNode = node.nodeId
+          }
+
+          return node
+        }).filter(Boolean)
+
+        leftLine = ee.data('nodeid')
+
+        return line
+      }
+    }).filter(Boolean)
+
+    console.log(delta)
   }
 
-  function calculateTreeDelta (oldTree, newTree) {
-    /* diff(oldTree, newTree).forEach(d => {
-      switch (d.type) {
-        case 'E': { // we need to rip off some nodes then re-add them without the removed content
-          break
+  function incomingCrdt () {
+    // for all nodes that we don't have a shadowmapping: they need to be added to the DOM and shadowmapped
+    // for all nodes that we do have a shadowmapping but that is not present in the crdt: they need to be removed from the DOM
+
+    let leftLine
+    let leftNode
+
+    let shadowsThatExist = {}
+
+    // sync
+    crdt.value().forEach(node => {
+      let shadow = node[shadowId]
+
+      if (node.content === '\n') {
+        if (!shadow) {
+          shadow = node[shadowId] = genNodeId()
+          const obj = $(`<div data-nodeid="${shadow}"></div>`)
+          if (leftLine) {
+            obj.appendAfter(leftLine)
+          } else {
+            field.append(obj)
+          }
+          shadowMap[shadow] = obj
+          leftLine = obj
+        } else {
+          leftLine = $(`*[data-nodeid="${shadow}"]`)
         }
-        case 'D': { // we need to remove stuff from the crdt at the right point
-          break
-        }
-        case 'A': { // we need to add stuff at the crdt at the right point
-          break
-        }
-        default: {
-          throw new TypeError('diff invalid, report')
+        leftNode = null
+        shadowsThatExist[shadow] = node
+      } else {
+        if (!shadow) {
+          shadow = node[shadowId] = genNodeId()
+          const obj = $(renderNode(node))
+          if (leftNode) {
+            obj.appendAfter(leftNode)
+          } else {
+            leftLine.append(obj)
+          }
+          shadowMap[shadow] = obj
+          leftNode = obj
         }
       }
-    }) */
+    })
 
-  }
-
-  function applyTreeDiff (diff) {
-
+    // del old
+    for (const shadowId in shadowMap) {
+      if (!shadowsThatExist[shadowId]) {
+        shadowMap[shadowId].delete()
+        delete shadowMap[shadowId]
+      }
+    }
   }
 
   function renderNode (node) {
     return `<span data-nodeid="${escape(node.nodeId)}" data-author="${escape(node.author)}" style="background: ${authorToRGBA(node.author)}">${escape(node.content)}</span>`
   }
 
-  let oldTree = []
-
   field.on('change', () => {
-    let newTree = contentTreeify(field)
-    console.log(oldTree, newTree)
-    const diff = calculateTreeDiff(oldTree, newTree)
-    console.log('out', diff)
-    oldTree = newTree
+    outgoingCrdt()
   })
 
   // TODO: input from user handle
