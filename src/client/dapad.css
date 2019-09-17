@@ -5,3 +5,9 @@
   color: #afafaf;
   padding: .5em;
 }
+
+.da-pad .cursor {
+  min-width: 2px;
+  max-width: 2px;
+  height: 2px;
+}

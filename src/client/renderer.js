@@ -14,13 +14,13 @@ const KEEP_CURSORS = 10 * 1000 // keep un-updated cursor for 10s
 
 const RGBA_CACHE = {}
 
-function authorToRGBA (author) {
+function authorToRGBA (author, alpha) {
   if (!RGBA_CACHE[author]) {
     let hash = crypto.createHash('sha1').update(author).digest('hex')
-    return (RGBA_CACHE[author] = `rgba(${parseInt(hash.substr(0, 2), 16)}, ${parseInt(hash.substr(2, 2), 16)}, ${parseInt(hash.substr(4, 2), 16)}, 0.16)`)
-  } else {
-    return RGBA_CACHE[author]
+    RGBA_CACHE[author] = `${parseInt(hash.substr(0, 2), 16)}, ${parseInt(hash.substr(2, 2), 16)}, ${parseInt(hash.substr(4, 2), 16)}`
   }
+
+  return `rgba(${RGBA_CACHE[author]}, ${alpha})`
 }
 
 function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
@@ -168,10 +168,12 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
         delete shadowMap[shadow]
       }
     }
+
+    renderCursors()
   }
 
   function renderNode (node) {
-    return `<span data-nodeid="${escape(node.nodeId)}" data-author="${escape(node.author)}" style="background: ${authorToRGBA(node.author)}">${escape(node.content)}</span>`
+    return `<span data-nodeid="${escape(node.nodeId)}" data-author="${escape(node.author)}" style="background: ${authorToRGBA(node.author, 0.16)}">${escape(node.content)}</span>`
   }
 
   field.on('change', () => {
@@ -184,47 +186,32 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
   // TODO: input from user handle
   // TODO: delta-update HTML as well
 
-  /* function renderState (lines, cursors) { // TODO: add cursor support
-    return lines.map(line =>
-      `<div>
-        ${line.map(renderNode)}
-        </div>`
-    ).join('')
-  }
+  function renderCursors () {
+    field.find('.cursor').remove()
 
-  function prepareRenderState () {
-    let _cursors = {}
+    let lines = field.contents().filter(e => e.nodeName === 'DIV')
+
     for (const author in cursors) {
       if (Date.now() - cursors[author].time > KEEP_CURSORS) {
         delete cursors[author]
       } else {
-        _cursors[cursors[author].pos] = author
+        const {line, char} = cursors[author].pos.split(':')
+        const lineEl = lines[line]
+
+        const obj = $(`<div class="cursor" style="background: ${authorToRGBA(author, 0.4)}"></div>`) // TODO: insert this somewhere
+
+        let nodes = $(lineEl).contents().filter(e => e.nodeName === 'SPAN')
+        nodes.forEach(node => {
+
+        })
       }
     }
-
-    const lines = crdt
-      .state()
-      .reduce((lines, node) => {
-        if (node.content === '\n') {
-          lines.push([])
-        } else {
-          lines[lines.length - 1].push(node)
-        }
-
-        return lines
-      }, [[]])
-
-    return renderState(lines, _cursors)
   }
-
-  function reRender () {
-    field.html(prepareRenderState())
-  } */
 
   return {
     onCursor: ({author, pos}) => {
       cursors[author] = {time: Date.now(), pos}
-      incomingCrdt()
+      renderCursors()
     },
     onChange: () => {
       incomingCrdt()
