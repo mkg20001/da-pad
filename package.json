@@ -33,7 +33,6 @@
     "parcel": "^1.12.3",
     "pg": "^7.12.1",
     "pg-hstore": "^2.3.3",
-    "relish": "https://github.com/mkg20001/relish/releases/download/v3.0.0/relish-3.0.0.tgz",
     "sequelize": "^5.18.4",
     "whatwg-fetch": "^3.0.0"
   },

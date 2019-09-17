@@ -7,16 +7,16 @@ const Joi = require('@hapi/joi')
 const pino = require('pino')
 const log = pino({name: 'da-pad'})
 
-const Relish = require('relish')({
+/* const Relish = require('relish')({
   messages: {}
-})
+}) */
 
 const init = async (config) => {
-  config.hapi.routes = {
+  /* config.hapi.routes = {
     validate: {
       failAction: Relish.failAction
     }
-  }
+  } */
 
   const server = Hapi.server(config.hapi)
 
