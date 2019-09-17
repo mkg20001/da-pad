@@ -17,7 +17,7 @@ const RGBA_CACHE = {}
 function authorToRGBA (author) {
   if (!RGBA_CACHE[author]) {
     let hash = crypto.createHash('sha1').update(author).digest('hex')
-    return (RGBA_CACHE[author] = `rgba(${parseInt(hash.substr(0, 2), 16)}, ${parseInt(hash.substr(2, 4), 16)}, ${parseInt(hash.substr(4, 6), 16)}, 0.16)`)
+    return (RGBA_CACHE[author] = `rgba(${parseInt(hash.substr(0, 2), 16)}, ${parseInt(hash.substr(2, 2), 16)}, ${parseInt(hash.substr(4, 2), 16)}, 0.16)`)
   } else {
     return RGBA_CACHE[author]
   }
@@ -86,7 +86,7 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
 
           if (t.nodeType === 3) {
             const id = genNodeId()
-            node = {author: 'selfFIXME', content: t.data, nodeId: id}
+            node = {author: authorId, content: t.data, nodeId: id}
 
             const obj = $(renderNode(node))
             obj.insertBefore(t)
@@ -162,10 +162,10 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
     })
 
     // del old
-    for (const shadowId in shadowMap) {
-      if (!shadowsThatExist[shadowId]) {
-        shadowMap[shadowId].delete()
-        delete shadowMap[shadowId]
+    for (const shadow in shadowMap) {
+      if (!shadowsThatExist[shadow]) {
+        shadowMap[shadow].remove()
+        delete shadowMap[shadow]
       }
     }
   }

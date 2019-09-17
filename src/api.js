@@ -61,7 +61,7 @@ module.exports = async (server, sequelize, config) => { // TODO: add canViewPad,
       })
 
       return {
-        delta: Cencode(mergeDeltas(res.map(d => d.delta))),
+        delta: Cencode(mergeDeltas(res.map(d => Cdecode(d.delta)))),
         lastId: res.length ? res.pop().deltaId : request.params.from
       }
     }
