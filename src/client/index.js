@@ -15,8 +15,6 @@ const SyncController = require('./sync')
   - apply new
 */
 
-// TODO: split into files
-
 module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
   const crdt = crdtType(padId)
 
@@ -34,7 +32,7 @@ module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
       crdt.apply(delta)
     },
     onCursor: (data) => {
-      renderer.onCursorChange(data)
+      renderer.onCursor(data)
     },
     onConnectionStatusChange: (state, safeToEdit) => {
       // TODO: add

@@ -184,7 +184,7 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
   // TODO: input from user handle
   // TODO: delta-update HTML as well
 
-  function renderState (lines, cursors) { // TODO: add cursor support
+  /* function renderState (lines, cursors) { // TODO: add cursor support
     return lines.map(line =>
       `<div>
         ${line.map(renderNode)}
@@ -219,15 +219,15 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
 
   function reRender () {
     field.html(prepareRenderState())
-  }
+  } */
 
   return {
     onCursor: ({author, pos}) => {
       cursors[author] = {time: Date.now(), pos}
-      reRender()
+      incomingCrdt()
     },
     onChange: () => {
-      reRender()
+      incomingCrdt()
     }
   }
 }
