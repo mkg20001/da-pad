@@ -14,7 +14,7 @@ const padId = window.location.hash.replace(/#/g, '')
 
 client(
   {
-    authorId: 'TODOMAKERANDOM',
+    authorId: 'test', // TODO: make random
     padId: padId
   },
   {

@@ -20,7 +20,7 @@ module.exports = async (server, sequelize, config) => { // TODO: add canViewPad,
     authorId: Sequelize.STRING,
 
     // delta: Sequelize.JSONB,
-    delta: Sequelize.STRING,
+    delta: Sequelize.STRING(10000),
     deltaId: Sequelize.INTEGER,
 
     createdAt: {
@@ -78,23 +78,24 @@ module.exports = async (server, sequelize, config) => { // TODO: add canViewPad,
 
       const authorId = 'test'
 
-      let {cursor, delta} = request.body
+      let {cursor, delta} = request.payload
+
+      const out = {}
 
       if (cursor) {
         server.publish(`${padUrl}/cursor`, { author: authorId, cursor })
+        out.cursor = true
       }
 
       if (delta) {
+        let deltaEnc = delta
         delta = Cdecode(delta)
         verifyValues(delta, authorId)
 
         // TODO: acid or put this directly on server
-        const prev = await Delta.findAll({
+        let prev = await Delta.findAll({
           where: {
-            padId: request.params.padId,
-            deltaId: {
-              [Op.gt]: request.params.from
-            }
+            padId
           },
           order: [
             ['deltaId', 'DESC']
@@ -106,12 +107,16 @@ module.exports = async (server, sequelize, config) => { // TODO: add canViewPad,
           padId,
           authorId,
 
-          delta,
-          deltaId: prev ? prev.deltaId + 1 : 1
+          delta: deltaEnc,
+          deltaId: prev ? (prev.deltaId + 1) : 1
         })
+
+        out.delta = _delta.toJSON().deltaId
 
         server.publish(`${padUrl}/cursor`, _delta)
       }
+
+      return out
     }
   })
 
