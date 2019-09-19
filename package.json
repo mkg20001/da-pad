@@ -49,5 +49,16 @@
     "@babel/core": "^7.6.0",
     "@babel/plugin-transform-runtime": "^7.6.0",
     "mocha": "^6.2.0"
-  }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mkg20001/da-pad.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mkg20001/da-pad/issues"
+  },
+  "homepage": "https://github.com/mkg20001/da-pad#readme"
 }
