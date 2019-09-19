@@ -147,6 +147,7 @@ module.exports = async (server, sequelize, config) => { // TODO: add canViewPad,
           padId: id
         }
       })
-    }
+    },
+    Delta
   }
 }

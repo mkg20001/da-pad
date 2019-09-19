@@ -53,7 +53,7 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
 
         indexMap[shadow] = i
         if (el.content === '\n') {
-          lineListMap[shadow] = lineList.push(shadow) - 1
+          lineListMap[shadow] = lineList.push(i) - 1
         }
       })
     }
@@ -70,19 +70,23 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
         if (!ee.data('nodeid')) {
           let id = genNodeId()
           let insertAt = lineList[lineListMap[leftLine] + 1]
-          if (insertAt == null) {
-            insertAt = len // at the end (TODO: use pushRight()?)
+          if (insertAt == null) { // we didn't any line after the current, append at end
+            delta.push(crdt.push({author: authorId, content: '\n', [shadowId]: id}))
           } else {
             insertAt-- // so we add just _after_ the linebreak
+            delta.push(crdt.insertAt(insertAt, {author: authorId, content: '\n', [shadowId]: id}))
           }
-          delta.push(crdt.insertAt(insertAt, {author: authorId, content: '\n', [shadowId]: id}))
           off()
           ee.data('nodeid', id)
         }
 
+        // TODO: handle line removals
+
         const line = ee.contents().toArray().map(t => {
           let node
           let te = $(t)
+
+          // TODO: handle node removals
 
           if (t.nodeType === 3) {
             const id = genNodeId()

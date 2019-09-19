@@ -30,6 +30,7 @@ module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
   const sync = await SyncController(_sync, storage, crdtType, padId, {
     onDelta: (delta) => { // NOTE: this is main()! this will yield the initial deltas as well.
       crdt.apply(delta)
+      renderer.onChange()
     },
     onCursor: (data) => {
       renderer.onCursor(data)
