@@ -21,13 +21,7 @@ module.exports = async (server, sequelize, config) => { // TODO: add canViewPad,
 
     // delta: Sequelize.JSONB,
     delta: Sequelize.STRING(10000),
-    deltaId: Sequelize.INTEGER,
-
-    createdAt: {
-      type: 'TIMESTAMP',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false
-    }
+    deltaId: Sequelize.INTEGER
   }, { sequelize, modelName: 'delta' })
 
   server.subscription('/_da-pad/{padId}/sub/cursor')
@@ -39,10 +33,10 @@ module.exports = async (server, sequelize, config) => { // TODO: add canViewPad,
 
     options: {
       validate: {
-        /* params: { TODO: hapi fails at it's own stuff, great
+        params: Joi.object({
           padId: Joi.string().required(),
           from: Joi.number().integer().min(0).default(0)
-        } */
+        })
       }
     },
 
@@ -83,7 +77,7 @@ module.exports = async (server, sequelize, config) => { // TODO: add canViewPad,
       const out = {}
 
       if (cursor) {
-        server.publish(`${padUrl}/cursor`, { author: authorId, cursor })
+        server.publish(`${padUrl}/cursor`, { a: authorId, cursor })
         out.cursor = true
       }
 
@@ -127,9 +121,11 @@ module.exports = async (server, sequelize, config) => { // TODO: add canViewPad,
       const pad = crdtType(id)
       initialContent = initialContent.split('\n').reduce((list, line) => {
         list.push(
-          {author: 'System', content: line},
-          {author: 'System', content: '\n'}
+          {a: 'System', c: line},
+          {a: 'System', c: '\n'}
         )
+
+        return list
       }, [])
 
       const initialDelta = pad.insertAllAt(0, initialContent)

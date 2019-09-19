@@ -25,10 +25,11 @@ function mergeDeltas (deltas) {
 
 function verifyValues (diff, ensureAuthor) {
   rga.value(diff).forEach(val => {
-    assert(val.content === '\n' || val.content.indexOf('\n') === -1)
-    assert(val.author)
+    assert(val.c)
+    assert(val.c === '\n' || val.c.indexOf('\n') === -1)
+    assert(val.a)
     if (ensureAuthor) {
-      assert(val.author === ensureAuthor)
+      assert(val.a === ensureAuthor)
     }
   })
 }

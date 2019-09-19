@@ -52,7 +52,7 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
         const shadow = el[shadowId]
 
         indexMap[shadow] = i
-        if (el.content === '\n') {
+        if (el.c === '\n') {
           lineListMap[shadow] = lineList.push(i) - 1
         }
       })
@@ -71,10 +71,10 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
           let id = genNodeId()
           let insertAt = lineList[lineListMap[leftLine] + 1]
           if (insertAt == null) { // we didn't any line after the current, append at end
-            delta.push(crdt.push({author: authorId, content: '\n', [shadowId]: id}))
+            delta.push(crdt.push({a: authorId, c: '\n', [shadowId]: id}))
           } else {
             insertAt-- // so we add just _after_ the linebreak
-            delta.push(crdt.insertAt(insertAt, {author: authorId, content: '\n', [shadowId]: id}))
+            delta.push(crdt.insertAt(insertAt, {a: authorId, c: '\n', [shadowId]: id}))
           }
           off()
           ee.data('nodeid', id)
@@ -90,7 +90,7 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
 
           if (t.nodeType === 3) {
             const id = genNodeId()
-            node = {author: authorId, content: t.data, nodeId: id}
+            node = {a: authorId, c: t.data, nodeId: id}
 
             const obj = $(renderNode(node))
             obj.insertBefore(t)
@@ -98,10 +98,10 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
             te.remove()
 
             let insertAt = indexMap[leftNode] || indexMap[leftLine]
-            delta.push(crdt.insertAt(insertAt, {author: authorId, content: t.data, [shadowId]: id}))
+            delta.push(crdt.insertAt(insertAt, {a: authorId, c: t.data, [shadowId]: id}))
             shadowMap[id] = obj
           } else if (t.nodeName === 'SPAN') {
-            node = {author: te.data('author'), content: te.text(), nodeId: te.data('nodeid')}
+            node = {a: te.data('author'), c: te.text(), nodeId: te.data('nodeid')}
             // TODO: check if value equal and update if not
           }
 
@@ -134,7 +134,7 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
     crdt.value().forEach(node => {
       let shadow = node[shadowId]
 
-      if (node.content === '\n') {
+      if (node.c === '\n') {
         if (!shadow) {
           shadow = node[shadowId] = genNodeId()
           const obj = $(`<div data-nodeid="${shadow}"></div>`)
@@ -177,7 +177,7 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
   }
 
   function renderNode (node) {
-    return `<span data-nodeid="${escape(node.nodeId)}" data-author="${escape(node.author)}" style="background: ${authorToRGBA(node.author, 0.16)}">${escape(node.content)}</span>`
+    return `<span data-nodeid="${escape(node.nodeId)}" data-author="${escape(node.a)}" style="background: ${authorToRGBA(node.a, 0.16)}">${escape(node.c)}</span>`
   }
 
   field.on('change', () => {
