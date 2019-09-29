@@ -1,6 +1,9 @@
 'use strict'
 
+/* eslint-env mocha */
+
 const CRDT = require('delta-crdts')
+const assert = require('assert').strict
 
 const jsdom = require('jsdom')
 const { JSDOM } = jsdom
@@ -16,16 +19,47 @@ function _ (html) {
   return { dom, field, $ }
 }
 
+function t ({ name, html, exec, outHtml }) {
+  it(name, async () => {
+    const { dom, field, $ } = _(html)
+
+    await exec({ dom, field, $ })
+
+    assert.deepEqual(outHtml, field.html())
+  })
+}
+
 describe('crdt join', () => {
-  it('can process a join', async () => {
-    const { dom, field, $ } = _()
-    const crdt = RGA('join')
+  t({
+    name: 'can process a push join text',
+    exec: ({ field, $ }) => {
+      const crdt = RGA('join')
+      const delta = crdt.push({a: 'test', c: 'hello'})
 
-    const delta = crdt.push({a: 'test', c: 'hello'})
-    console.log(delta)
+      join($, field, delta)
+    },
+    outHtml: '<div data-nodeid="dummy"><span data-nodeid="kgGkam9pbg==" data-author="test" style="background: rgba(169, 74, 143, 0.16);">hello</span></div>'
+  })
 
-    join(field, delta)
+  t({
+    name: 'can process a push join line',
+    exec: ({ field, $ }) => {
+      const crdt = RGA('join')
+      const delta = crdt.push({a: 'test', c: '\n'})
 
-    console.log('HTML', field.html())
+      join($, field, delta)
+    },
+    outHtml: '<div data-nodeid="kgGkam9pbg=="></div>'
+  })
+
+  t({
+    name: 'can process a push join line and text',
+    exec: ({ field, $ }) => {
+      const crdt = RGA('join')
+
+      join($, field, crdt.push({a: 'test', c: '\n'}))
+      join($, field, crdt.push({a: 'test', c: 'hello'}))
+    },
+    outHtml: '<div data-nodeid="kgGkam9pbg=="><span data-nodeid="kgKkam9pbg==" data-author="test" style="background: rgba(169, 74, 143, 0.16);">hello</span></div>'
   })
 })

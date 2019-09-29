@@ -13,16 +13,24 @@ function authorToRGBA (author, alpha) {
   return `rgba(${RGBA_CACHE[author]}, ${alpha})`
 }
 
-function renderText (nodeId, node) {
-  return `<span data-nodeid="${escape(nodeId)}" data-author="${escape(node.a)}" style="background: ${authorToRGBA(node.a, 0.16)}">${escape(node.c)}</span>`
+function renderText ($, nodeId, data) {
+  // const node = $(`<span data-nodeid="${escape(nodeId)}" data-author="${escape(node.a)}" style="background: ${authorToRGBA(node.a, 0.16)}">${escape(node.c)}</span>`)
+  const node = $('<span></span>')
+  node.attr('data-nodeid', String(nodeId))
+  node.attr('data-author', data.a)
+  node.css('background', authorToRGBA(data.a, 0.16))
+  node.text(data.c)
+  return node
 }
 
-function renderLine (nodeId, node) {
-  return `<div data-nodeid="${nodeId}"></div>`
+function renderLine ($, nodeId, data) {
+  const node = $('<div></div>')
+  node.attr('data-nodeid', String(nodeId))
+  return node
 }
 
 module.exports = {
-  renderNode,
+  renderText,
   renderLine,
   authorToRGBA
 }

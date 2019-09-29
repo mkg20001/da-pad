@@ -4,8 +4,6 @@ const { mergeDeltas } = require('../crdt')
 const crypto = require('crypto')
 const genNodeId = () => crypto.randomBytes(8).toString('hex')
 
-const $ = require('jquery')
-
 const assert = require('assert')
 const { encode, decode } = require('delta-crdts-msgpack-codec')
 
@@ -24,7 +22,7 @@ const STORAGE = Symbol('CRDT_STORAGE')
 // As defined in http://hal.upmc.fr/inria-00555588/document
 
 // from RGA src, adapated to directly work on dom
-function join (field, delta, options = {}) {
+function join ($, field, delta, options = {}) {
   const storage = field[STORAGE] = field[STORAGE] || {
     c: [
       new Map([[null, null]]), // VA
@@ -32,7 +30,7 @@ function join (field, delta, options = {}) {
       new Map([[null, null]]), // E
       new Set() // UE
     ],
-    shoadowMap: {}
+    shadowMap: {}
   }
 
   // TODO: read some values directly from dom?
@@ -114,11 +112,13 @@ function join (field, delta, options = {}) {
     }
 
     const leftValue = added.get(leftEdge)
-    const value = added.get(edge)
+    const value = added.get(newKey)
 
     if (value.c === '\n') {
       // line
-      const line = $(renderLine(edge, value))
+      const line = renderLine($, newKey, value)
+      line[SHADOW] = newKey
+      storage.shadowMap[newKey] = line
 
       if (!leftEdge) {
         // insert after field
@@ -132,13 +132,17 @@ function join (field, delta, options = {}) {
       }
     } else {
       // text
-      const text = $(renderText(edge, value))
+      const text = renderText($, newKey, value)
+      text[SHADOW] = newKey
+      storage.shadowMap[newKey] = text
 
       if (!leftEdge) {
         // get the first line, insert into that
         const firstLine = field.children()[0]
         if (!firstLine) {
-          // TODO: handle this
+          const firstLine = renderLine($, 'dummy', {a: 'system', c: '\n'})
+          field.append(firstLine)
+          firstLine.append(text)
         } else {
           firstLine.append(text)
         }
