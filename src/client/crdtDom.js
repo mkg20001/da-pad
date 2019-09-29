@@ -12,6 +12,8 @@ const { renderLine, renderText } = require('./rendererUtils')
 const SHADOW = Symbol('CRDT_SHADOW_ID')
 const STORAGE = Symbol('CRDT_STORAGE')
 
+const dummyLine = ($) => renderLine($, 'dummy', {a: 'system', c: '\n'})
+
 // Replicable Growable Array (RGA)
 // State is represented by 4 sets:
 //   * Added Vertices (VA)
@@ -22,7 +24,7 @@ const STORAGE = Symbol('CRDT_STORAGE')
 // As defined in http://hal.upmc.fr/inria-00555588/document
 
 // from RGA src, adapated to directly work on dom
-function join ($, field, delta, options = {}) {
+function join ($, field, delta, options = {}) { // eslint-disable-line complexity
   const storage = field[STORAGE] = field[STORAGE] || {
     c: [
       new Map([[null, null]]), // VA
@@ -88,6 +90,47 @@ function join ($, field, delta, options = {}) {
     } while (progress)
   }
 
+  // added
+
+  delta[1].forEach(verticle => {
+    const value = added.get(verticle)
+    const node = storage.shadowMap[verticle]
+
+    if (node) {
+      if (value.c === '\n') {
+        // it's a line
+
+        if (node.children().length) {
+          // move children to previous line, remove line
+          const leftLine = node.prev()
+
+          if (leftLine) {
+            // if we have a left line, move our children there
+            node.children().toArray().forEach(e => $(e).appendTo(leftLine))
+          } else {
+            // if we don't have a left line, create one and move our children there
+            const newLine = dummyLine($)
+            newLine.prependTo(field)
+
+            node.children().toArray().forEach(e => $(e).appendTo(newLine))
+          }
+
+          node.remove()
+        } else {
+          // just remove line
+          node.remove()
+        }
+      } else {
+        // it's a text node
+
+        // since they aren't dependent on by anything, we can just toss 'em
+        node.remove()
+      }
+    }
+  })
+
+  // /added
+
   storage.c = [added, removed, resultEdges, unmergedEdges]
 
   function insertEdge (edge) { // here we render dom nodes
@@ -120,6 +163,8 @@ function join ($, field, delta, options = {}) {
       line[SHADOW] = newKey
       storage.shadowMap[newKey] = line
 
+      // TODO: handle re-arrange (all nodes following this line until the next must be moved to this line instead or whereever they are)
+
       if (!leftEdge) {
         // insert after field
         field.append(line)
@@ -140,7 +185,7 @@ function join ($, field, delta, options = {}) {
         // get the first line, insert into that
         const firstLine = field.children()[0]
         if (!firstLine) {
-          const firstLine = renderLine($, 'dummy', {a: 'system', c: '\n'})
+          const firstLine = dummyLine($)
           field.append(firstLine)
           firstLine.append(text)
         } else {

@@ -72,4 +72,17 @@ describe('crdt join', () => {
     },
     outHtml: '<div data-nodeid="kgGkam9pbg=="><span data-nodeid="kgKkam9pbg==" data-author="test" style="background: rgba(169, 74, 143, 0.16);">hello</span></div>'
   })
+
+  t({
+    name: 'can process a merged push join line and text + removal sequential',
+    exec: ({ field, $ }) => {
+      const crdt = RGA('join')
+      const delta = mergeDeltas([crdt.push({a: 'test', c: '\n'}), crdt.push({a: 'test', c: 'hello'})])
+
+      join($, field, delta)
+      join($, field, crdt.removeAt(1))
+      join($, field, crdt.removeAt(0))
+    },
+    outHtml: ''
+  })
 })
