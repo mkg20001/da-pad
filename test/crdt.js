@@ -24,15 +24,20 @@ function t ({ name, html, exec, outHtml, outDelta }) {
 
     await exec({ dom, field, $ })
 
+    if (outDelta != null) {
+      const delta = makeDelta($, field, 'join', 'test')
+      assert.deepEqual(outDelta, delta)
+      join($, field, delta)
+    }
+
     if (outHtml != null) {
       assert.deepEqual(outHtml, field.html())
     }
-
-    if (outDelta != null) {
-      assert.deepEqual(outDelta, makeDelta($, field))
-    }
   })
 }
+
+const crdt = RGA('join')
+const deltaMini = mergeDeltas([crdt.push({a: 'test', c: '\n'}), crdt.push({a: 'test', c: 'hello'})])
 
 describe('crdt join', () => {
   t({
@@ -71,10 +76,7 @@ describe('crdt join', () => {
   t({
     name: 'can process a merged push join line and text',
     exec: ({ field, $ }) => {
-      const crdt = RGA('join')
-      const delta = mergeDeltas([crdt.push({a: 'test', c: '\n'}), crdt.push({a: 'test', c: 'hello'})])
-
-      join($, field, delta)
+      join($, field, deltaMini)
     },
     outHtml: '<div data-nodeid="kgGkam9pbg=="><span data-nodeid="kgKkam9pbg==" data-author="test" style="background: rgba(169, 74, 143, 0.16);">hello</span></div>'
   })
@@ -82,10 +84,7 @@ describe('crdt join', () => {
   t({
     name: 'can process a merged push join line and text + removal sequential',
     exec: ({ field, $ }) => {
-      const crdt = RGA('join')
-      const delta = mergeDeltas([crdt.push({a: 'test', c: '\n'}), crdt.push({a: 'test', c: 'hello'})])
-
-      join($, field, delta)
+      join($, field, deltaMini)
       join($, field, crdt.removeAt(1))
       join($, field, crdt.removeAt(0))
     },
@@ -95,9 +94,23 @@ describe('crdt join', () => {
 
 describe('crdt delta', () => {
   t({
-    name: 'can process an line addition',
-    html: '<body><div id="dapad"><div>test</div></div></body>',
-    exec: () => {},
-    outDelta: {}
+    name: 'can process a line addition',
+    html: '<body><div id="dapad"></div></body>',
+    exec: ({ field, $ }) => {
+      join($, field, deltaMini)
+      $('<div>test</div>').appendTo(field)
+    },
+    outDelta: [
+      new Map([
+        ['kgOkam9pbg==', { a: 'test', c: '\n' }],
+        ['kgSkam9pbg==', { a: 'test', c: 'test' }]
+      ]),
+      new Set(),
+      new Map([
+        ['kgGkam9pbg==', 'kgOkam9pbg=='],
+        ['kgOkam9pbg==', 'kgSkam9pbg==']
+      ]),
+      new Set()
+    ]
   })
 })

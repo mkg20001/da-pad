@@ -25,7 +25,8 @@ const dummyLine = ($) => renderLine($, 'dummy', {a: 'system', c: '\n'})
 
 // from RGA src, adapated to directly work on dom
 function join ($, field, delta, options = {}) { // eslint-disable-line complexity
-  const storage = field[STORAGE] = field[STORAGE] || {
+  const _s = field[0] ? field[0] : field
+  const storage = _s[STORAGE] = _s[STORAGE] || {
     c: [
       new Map([[null, null]]), // VA
       new Set(), // VR
@@ -208,9 +209,196 @@ function join ($, field, delta, options = {}) { // eslint-disable-line complexit
   }
 }
 
-// own
-function makeDelta ($, delta) {
+// from RGA, modified to not resolve pos, instead uses left parameter directly
+function insertAllAt (id, state, left, values) {
+  const [, removed] = state
 
+  const newAdded = new Map()
+  const newRemoved = new Set()
+  if (removed.has(left)) {
+    newRemoved.add(left)
+  }
+
+  const newEdges = new Map()
+
+  values.forEach((value, index) => {
+    const newId = createUniqueId(state, id, index)
+    newAdded.set(newId, value)
+    newEdges.set(left, newId)
+    left = newId
+  })
+
+  return [newAdded, newRemoved, newEdges, new Set()]
+}
+
+// own
+function makeDelta ($, field, padId, authorId) {
+  const _s = field[0] ? field[0] : field
+  const storage = _s[STORAGE]
+
+  let state = storage.c
+
+  let deltas = []
+  const delta = (d) => {
+    state = mergeDeltas([state, d])
+    deltas.push(d)
+  }
+
+  // addition
+  field.children().toArray().forEach(t => {
+    const leftNode = $(t).prev()
+    let leftEdge = null
+
+    if (t.nodeType === 3) {
+      // we have a lonely text
+
+      let append = []
+      // get the left node
+      if (!leftNode) {
+        // if we don't have one, make a line and add to delta
+        // also set leftEdge then, line is inserted after null
+        append.push({a: authorId, c: '\n'})
+      } else {
+        leftEdge = leftNode.data('nodeid')
+      }
+
+      // append the text node to crdt after leftEdge and add delta
+      append.push({a: authorId, c: t.data})
+
+      delta(insertAllAt(padId, state, leftEdge, append))
+
+      $(t).remove() // remove from DOM
+    } else if (t.nodeName === 'DIV') {
+      const nodeId = $(t).data('nodeid')
+      if (!nodeId) { // lonely line
+        leftEdge = leftNode ? leftNode.data('nodeid') : null
+        const append = [{a: authorId, c: '\n'}, {a: authorId, c: $(t).text()}]
+
+        delta(insertAllAt(padId, state, leftEdge, append))
+
+        $(t).remove() // remove from DOM
+      } else {
+        const leftLine = $(t).data('nodeid')
+
+        $(t).children().toArray().forEach(t => {
+          if (t.nodeType === 3) { // lonely text in line
+            // check if we have a left node, otherwise use line
+            // then append
+            let leftNode = $(t).prev()
+
+            let leftEdge = null
+            if (!leftNode) {
+              // if we don't have a left node use line
+              leftEdge = leftLine
+            } else {
+              // otherwise use prev nodeid
+              leftEdge = leftNode.data('nodeid')
+            }
+
+            delta(insertAllAt(padId, state, leftEdge, [{a: authorId, c: t.data}]))
+
+            $(t).remove() // remove from DOM
+          } else if (t.nodeName === 'SPAN') { // line
+            // check if content is same. if changed, create new node and remove old. but keep in dom since CRDT will sync
+          }
+        })
+      }
+    }
+  })
+
+  return deltas.length ? mergeDeltas(deltas) : null
+}
+
+/*
+let indexMap = {}
+let lineListMap = {}
+let lineList = []
+
+let delta = []
+
+let val
+let len
+
+const off = () => {
+  val = crdt.value()
+  len = val.length
+  val.forEach((el, i) => {
+    const shadow = el[shadowId]
+
+    indexMap[shadow] = i
+    if (el.c === '\n') {
+      lineListMap[shadow] = lineList.push(i) - 1
+    }
+  })
+}
+
+off()
+
+let leftLine
+field.children().toArray().map(e => {
+  let ee = $(e)
+
+  if (e.nodeName === 'DIV') {
+    let leftNode
+
+    if (!ee.data('nodeid')) {
+      let id = genNodeId()
+      let insertAt = lineList[lineListMap[leftLine] + 1]
+      if (insertAt == null) { // we didn't any line after the current, append at end
+        delta.push(crdt.push({a: authorId, c: '\n', [shadowId]: id}))
+      } else {
+        insertAt-- // so we add just _after_ the linebreak
+        delta.push(crdt.insertAt(insertAt, {a: authorId, c: '\n', [shadowId]: id}))
+      }
+      off()
+      ee.data('nodeid', id)
+    }
+
+    // TODO: handle line removals
+
+    const line = ee.contents().toArray().map(t => {
+      let node
+      let te = $(t)
+
+      // TODO: handle node removals
+
+      if (t.nodeType === 3) {
+        const id = genNodeId()
+        node = {a: authorId, c: t.data, nodeId: id}
+
+        const obj = $(renderNode(node))
+        obj.insertBefore(t)
+
+        te.remove()
+
+        let insertAt = indexMap[leftNode] || indexMap[leftLine]
+        delta.push(crdt.insertAt(insertAt, {a: authorId, c: t.data, [shadowId]: id}))
+        shadowMap[id] = obj
+      } else if (t.nodeName === 'SPAN') {
+        node = {a: te.data('author'), c: te.text(), nodeId: te.data('nodeid')}
+        // TODO: check if value equal and update if not
+      }
+
+      if (node) {
+        leftNode = node.nodeId
+      }
+
+      return node
+    }).filter(Boolean)
+
+    leftLine = ee.data('nodeid')
+
+    return line
+  }
+}).filter(Boolean)
+
+return delta.length ? mergeDeltas(delta) : null */
+
+// from RGA src
+function createUniqueId (state, nodeId, index = 0) {
+  const [, , edges] = state
+  const pos = edges.size + index
+  return encode([pos, nodeId]).toString('base64')
 }
 
 // from RGA src
