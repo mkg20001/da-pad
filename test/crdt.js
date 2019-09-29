@@ -2,6 +2,8 @@
 
 /* eslint-env mocha */
 
+global.USEATTR = true
+
 const assert = require('assert').strict
 
 const jsdom = require('jsdom')

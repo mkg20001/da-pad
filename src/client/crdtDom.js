@@ -211,6 +211,8 @@ function join ($, field, delta, options = {}) { // eslint-disable-line complexit
 
 // from RGA, modified to not resolve pos, instead uses left parameter directly
 function insertAllAt (id, state, left, values) {
+  if (!left) { left = null; console.warn('left is null') }
+
   const [, removed] = state
 
   const newAdded = new Map()
@@ -245,7 +247,7 @@ function makeDelta ($, field, padId, authorId) {
   }
 
   // addition
-  field.children().toArray().forEach(t => {
+  field.contents().toArray().forEach(t => {
     const leftNode = $(t).prev()
     let leftEdge = null
 
@@ -272,7 +274,11 @@ function makeDelta ($, field, padId, authorId) {
       const nodeId = $(t).data('nodeid')
       if (!nodeId) { // lonely line
         leftEdge = leftNode ? leftNode.data('nodeid') : null
-        const append = [{a: authorId, c: '\n'}, {a: authorId, c: $(t).text()}]
+        let append = [{a: authorId, c: '\n'}]
+
+        if ($(t).text().length) {
+          append.push({a: authorId, c: $(t).text()})
+        }
 
         delta(insertAllAt(padId, state, leftEdge, append))
 
@@ -280,7 +286,7 @@ function makeDelta ($, field, padId, authorId) {
       } else {
         const leftLine = $(t).data('nodeid')
 
-        $(t).children().toArray().forEach(t => {
+        $(t).contents().toArray().forEach(t => {
           if (t.nodeType === 3) { // lonely text in line
             // check if we have a left node, otherwise use line
             // then append

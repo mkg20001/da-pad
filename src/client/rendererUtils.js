@@ -1,6 +1,7 @@
 'use strict'
 
 const crypto = require('crypto')
+const USEATTR = global.USEATTR
 
 const RGBA_CACHE = {}
 
@@ -14,10 +15,14 @@ function authorToRGBA (author, alpha) {
 }
 
 function renderText ($, nodeId, data) {
-  // const node = $(`<span data-nodeid="${escape(nodeId)}" data-author="${escape(node.a)}" style="background: ${authorToRGBA(node.a, 0.16)}">${escape(node.c)}</span>`)
   const node = $('<span></span>')
-  node.attr('data-nodeid', String(nodeId))
-  node.attr('data-author', data.a)
+  if (USEATTR) {
+    node.attr('data-nodeid', String(nodeId))
+    node.attr('data-author', data.a)
+  } else {
+    node.data('nodeid', nodeId)
+    node.data('author', data.a)
+  }
   node.css('background', authorToRGBA(data.a, 0.16))
   node.text(data.c)
   return node
@@ -25,7 +30,11 @@ function renderText ($, nodeId, data) {
 
 function renderLine ($, nodeId, data) {
   const node = $('<div></div>')
-  node.attr('data-nodeid', String(nodeId))
+  if (USEATTR) {
+    node.attr('data-nodeid', String(nodeId))
+  } else {
+    node.data('nodeid', nodeId)
+  }
   return node
 }
 

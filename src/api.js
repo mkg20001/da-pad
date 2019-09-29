@@ -77,7 +77,7 @@ module.exports = async (server, sequelize, config) => { // TODO: add canViewPad,
       const out = {}
 
       if (cursor) {
-        server.publish(`${padUrl}/cursor`, { a: authorId, cursor })
+        server.publish(`${padUrl}/cursor`, { a: authorId, c: cursor })
         out.cursor = true
       }
 
@@ -107,7 +107,7 @@ module.exports = async (server, sequelize, config) => { // TODO: add canViewPad,
 
         out.delta = _delta.toJSON().deltaId
 
-        server.publish(`${padUrl}/cursor`, _delta)
+        server.publish(`${padUrl}/delta`, _delta)
       }
 
       return out

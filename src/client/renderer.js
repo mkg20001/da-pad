@@ -31,7 +31,6 @@ function Renderer ({htmlField: id}, {padId, authorId}, {onDelta, onCursorChange}
 
   field.wysiwygEvt()
   field.on('change', () => {
-    console.log($, field, padId, authorId)
     const delta = makeDelta($, field, padId, authorId)
     if (delta) {
       join($, field, delta)
@@ -65,7 +64,7 @@ function Renderer ({htmlField: id}, {padId, authorId}, {onDelta, onCursorChange}
   }
 
   return {
-    onCursor: ({author, pos}) => {
+    onCursor: ({a: author, c: pos}) => {
       cursors[author] = {time: Date.now(), pos}
       renderCursors()
     },

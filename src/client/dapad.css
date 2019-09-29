@@ -32,7 +32,6 @@
   max-width: 16px;
   max-height: 16px;
   border-radius: 50%;
-  margin-right: 4px;
   margin-bottom: -2px;
 }
 
@@ -41,6 +40,18 @@
 }
 .da-state.da-s-grey > .da-bulb {
   background: grey;
+}
+
+.da-state:not(.da-s-yellow) span {
+  display: none;
+}
+
+.da-state:hover span {
+  display: inline-block;
+}
+
+.da-state:hover .da-bulb {
+  margin-right: 4px;
 }
 
 .da-state.da-s-yellow {
