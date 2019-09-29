@@ -1,12 +1,11 @@
 'use strict'
 
 require('./dapad.css')
-const {crdtType} = require('../crdt')
 
 const Renderer = require('./renderer')
 const SyncController = require('./sync')
 
-module.exports = async (padInfo, _renderer, _sync, storage) => {
+module.exports = async (padInfo, _renderer, _sync, _storage) => {
   const renderer = Renderer(_renderer, padInfo, {
     onDelta: (delta) => {
       sync.send.delta(delta)
@@ -16,7 +15,7 @@ module.exports = async (padInfo, _renderer, _sync, storage) => {
     }
   })
 
-  const sync = await SyncController(_sync, storage, crdtType, padInfo, {
+  const sync = await SyncController(_sync, _storage, padInfo, {
     onDelta: (delta) => { // NOTE: this is main()! this will yield the initial deltas as well.
       renderer.onChange(delta)
     },
