@@ -16,7 +16,7 @@ module.exports = async (padInfo, _renderer, _sync, _storage) => {
   })
 
   const sync = await SyncController(_sync, _storage, padInfo, {
-    onDelta: (delta) => { // NOTE: this is main()! this will yield the initial deltas as well.
+    onDelta: (delta) => { // NOTE: this will yield the initial delta as well
       renderer.onChange(delta)
     },
     onCursor: (data) => {
