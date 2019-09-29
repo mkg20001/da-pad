@@ -1,22 +1,13 @@
 'use strict'
 
-const {join, makeDelta} = require('./join')
+const {join, makeDelta} = require('./crdtDom')
+
+const {authorToRGBA} = require('./rendererUtils')
 
 const $ = require('jquery')
 require('./onchange-plugin')($)
 
 const KEEP_CURSORS = 10 * 1000 // keep un-updated cursor for 10s
-
-const RGBA_CACHE = {}
-
-function authorToRGBA (author, alpha) {
-  if (!RGBA_CACHE[author]) {
-    let hash = crypto.createHash('sha1').update(author).digest('hex')
-    RGBA_CACHE[author] = `${parseInt(hash.substr(0, 2), 16)}, ${parseInt(hash.substr(2, 2), 16)}, ${parseInt(hash.substr(4, 2), 16)}`
-  }
-
-  return `rgba(${RGBA_CACHE[author]}, ${alpha})`
-}
 
 function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
   const field = $(htmlField)
@@ -25,10 +16,6 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
   field.toggleClass('da-pad')
   field.attr('contenteditable', true)
   field.wysiwygEvt()
-
-  function renderNode (node) {
-    return `<span data-nodeid="${escape(node.nodeId)}" data-author="${escape(node.a)}" style="background: ${authorToRGBA(node.a, 0.16)}">${escape(node.c)}</span>`
-  }
 
   field.on('change', () => {
     const delta = makeDelta()

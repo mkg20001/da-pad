@@ -7,6 +7,8 @@ const genNodeId = () => crypto.randomBytes(8).toString('hex')
 const assert = require('assert')
 const { encode, decode } = require('delta-crdts-msgpack-codec')
 
+const { renderLine, renderDom } = require('./rendererUtils')
+
 const SHADOW = Symbol('CRDT_SHADOW_ID')
 const STORAGE = Symbol('CRDT_STORAGE')
 

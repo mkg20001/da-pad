@@ -7,7 +7,7 @@ const { JSDOM } = jsdom
 const jquery = require('jquery')
 
 const RGA = CRDT('rga')
-const {join, makeDelta} = require('../src/client/join')
+const {join, makeDelta} = require('../src/client/crdtDom')
 
 function _ (html) {
   const dom = new JSDOM(html || '<body><div id="dapad"></div></body>')
