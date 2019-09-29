@@ -3,7 +3,7 @@
 const Nes = require('@hapi/nes/lib/client')
 const {mergeDeltas, Cencode, Cdecode} = require('../crdt')
 
-async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, padId, {onDelta, onCursor, onConnectionStatusChange}) {
+async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, {authorId, padId}, {onDelta, onCursor, onConnectionStatusChange}) {
   // get stuff from storage
   let lastSyncDeltaId = await get('lastSyncedDeltaId', 0)
   let lastSyncState = await get('lastSyncedState')

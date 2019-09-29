@@ -15,7 +15,7 @@ const STATE = [
   ['green', 'Online']
 ]
 
-function Renderer ({htmlField: id}, authorId, {onDelta, onCursorChange}) {
+function Renderer ({htmlField: id}, {padId, authorId}, {onDelta, onCursorChange}) {
   const main = $(id)
   const cursors = {}
 
@@ -31,9 +31,10 @@ function Renderer ({htmlField: id}, authorId, {onDelta, onCursorChange}) {
 
   field.wysiwygEvt()
   field.on('change', () => {
-    const delta = makeDelta()
+    console.log($, field, padId, authorId)
+    const delta = makeDelta($, field, padId, authorId)
     if (delta) {
-      join(field, delta)
+      join($, field, delta)
       onDelta(delta)
     }
   })

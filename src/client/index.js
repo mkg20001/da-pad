@@ -6,19 +6,8 @@ const {crdtType} = require('../crdt')
 const Renderer = require('./renderer')
 const SyncController = require('./sync')
 
-/*
-@deltaIn:
-  - new delta comes in
-  - calculate current delta
-  - apply current
-  - apply diff tree via new
-  - apply new
-*/
-
-module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
-  const crdt = crdtType(padId)
-
-  const renderer = Renderer(_renderer, authorId, {
+module.exports = async (padInfo, _renderer, _sync, storage) => {
+  const renderer = Renderer(_renderer, padInfo, {
     onDelta: (delta) => {
       sync.send.delta(delta)
     },
@@ -27,9 +16,8 @@ module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
     }
   })
 
-  const sync = await SyncController(_sync, storage, crdtType, padId, {
+  const sync = await SyncController(_sync, storage, crdtType, padInfo, {
     onDelta: (delta) => { // NOTE: this is main()! this will yield the initial deltas as well.
-      crdt.apply(delta)
       renderer.onChange(delta)
     },
     onCursor: (data) => {
