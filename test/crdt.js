@@ -1,12 +1,30 @@
 'use strict'
 
-const {crdtType} = require('../src/crdt')
+const CRDT = require('delta-crdts')
 
-describe('crdt', () => {
-  it('can create a text object', () => {
-    let crdt = crdtType('id')
-    crdt.createLineAfter(0)
-    crdt.appendTextAfterText(0, 0, {author: 'me', content: 'content'})
-    console.log(crdt.value())
+const jsdom = require('jsdom')
+const { JSDOM } = jsdom
+const jquery = require('jquery')
+
+const RGA = CRDT('rga')
+const {join, makeDelta} = require('../src/client/join')
+
+function _ (html) {
+  const dom = new JSDOM(html || '<body><div id="dapad"></div></body>')
+  const $ = jquery(dom.window)
+  const field = $('#dapad')
+  return { dom, field, $ }
+}
+
+describe('crdt join', () => {
+  it('can process a join', () => {
+    const { dom, field, $ } = _()
+    const crdt = RGA('join')
+
+    const delta = crdt.push({a: 'test', c: 'hello'})
+
+    join(field, delta)
+
+    console.log(field.html())
   })
 })

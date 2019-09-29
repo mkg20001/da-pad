@@ -1,15 +1,9 @@
 'use strict'
 
-const { mergeDeltas } = require('../crdt')
-
-const crypto = require('crypto')
-const genNodeId = () => crypto.randomBytes(8).toString('hex')
 const {join, makeDelta} = require('./join')
 
 const $ = require('jquery')
 require('./onchange-plugin')($)
-
-const shadowId = Symbol('CRDT_SHADOW_ID')
 
 const KEEP_CURSORS = 10 * 1000 // keep un-updated cursor for 10s
 
