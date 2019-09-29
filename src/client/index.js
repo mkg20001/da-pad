@@ -36,7 +36,7 @@ module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
       renderer.onCursor(data)
     },
     onConnectionStatusChange: (state, safeToEdit) => {
-      renderer.onConnectionStatus(state, safeToEdit)
+      renderer.onConnectionStatusChange(state, safeToEdit)
     }
   })
 

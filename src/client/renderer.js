@@ -12,7 +12,7 @@ const KEEP_CURSORS = 10 * 1000 // keep un-updated cursor for 10s
 const STATE = [
   ['grey', 'Offline'],
   ['yellow', 'Syncing...'],
-  ['Green', 'Online']
+  ['green', 'Online']
 ]
 
 function Renderer ({htmlField: id}, authorId, {onDelta, onCursorChange}) {
@@ -21,8 +21,10 @@ function Renderer ({htmlField: id}, authorId, {onDelta, onCursorChange}) {
 
   main.toggleClass('da-pad')
 
-  const state = $('<div class="da-state"><div class="da-bulb"></div>Loading...</div>')
+  const state = $('<div class="da-state"><div class="da-bulb"></div></div>')
   state.appendTo(main)
+  const stateText = $('<span>Loading...</span>')
+  stateText.appendTo(state)
 
   const field = $('<div class="da-contents"></div>')
   field.appendTo(main)
@@ -81,7 +83,7 @@ function Renderer ({htmlField: id}, authorId, {onDelta, onCursorChange}) {
       state.removeClass('da-s-green')
       state.addClass('da-s-' + color)
 
-      state.text(text)
+      stateText.text(text)
 
       field.attr('contenteditable', safeToEdit)
     }
