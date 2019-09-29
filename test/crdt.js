@@ -22,6 +22,7 @@ describe('crdt join', () => {
     const crdt = RGA('join')
 
     const delta = crdt.push({a: 'test', c: 'hello'})
+    console.log(delta)
 
     join(field, delta)
 

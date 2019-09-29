@@ -102,11 +102,37 @@ function join (field, delta, options = {}) {
       right = resultEdges.get(right) || null
     }
 
-    let leftNode = field
+    // added
 
+    let leftNode
     if (leftEdge) {
       leftNode = storage.shadowMap[leftEdge]
     }
+
+    const leftValue = added.get(leftEdge)
+    const value = added.get(edge)
+
+    if (value.c === '\n') {
+      // line
+      if (!leftEdge) {
+        // insert after field
+      } else if (leftValue.c === '\n') {
+        // insert after left line
+      } else if (leftValue) {
+        // insert after line of left node
+      }
+    } else {
+      // text
+      if (!leftEdge) {
+        // get the first line, insert into that
+      } else if (leftValue.c === '\n') {
+        // insert at beginning of line
+      } else if (leftValue) {
+        // insert after left node
+      }
+    }
+
+    // /added
 
     resultEdges.set(leftEdge, newKey)
     resultEdges.set(newKey, right)
