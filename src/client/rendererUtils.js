@@ -13,7 +13,7 @@ function authorToRGBA (author, alpha) {
   return `rgba(${RGBA_CACHE[author]}, ${alpha})`
 }
 
-function renderNode (nodeId, node) {
+function renderText (nodeId, node) {
   return `<span data-nodeid="${escape(nodeId)}" data-author="${escape(node.a)}" style="background: ${authorToRGBA(node.a, 0.16)}">${escape(node.c)}</span>`
 }
 

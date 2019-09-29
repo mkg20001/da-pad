@@ -4,10 +4,12 @@ const { mergeDeltas } = require('../crdt')
 const crypto = require('crypto')
 const genNodeId = () => crypto.randomBytes(8).toString('hex')
 
+const $ = require('jquery')
+
 const assert = require('assert')
 const { encode, decode } = require('delta-crdts-msgpack-codec')
 
-const { renderLine, renderDom } = require('./rendererUtils')
+const { renderLine, renderText } = require('./rendererUtils')
 
 const SHADOW = Symbol('CRDT_SHADOW_ID')
 const STORAGE = Symbol('CRDT_STORAGE')
@@ -116,21 +118,36 @@ function join (field, delta, options = {}) {
 
     if (value.c === '\n') {
       // line
+      const line = $(renderLine(edge, value))
+
       if (!leftEdge) {
         // insert after field
+        field.append(line)
       } else if (leftValue.c === '\n') {
         // insert after left line
+        line.appendAfter(leftNode)
       } else if (leftValue) {
         // insert after line of left node
+        line.insertAfter(leftNode.parent())
       }
     } else {
       // text
+      const text = $(renderText(edge, value))
+
       if (!leftEdge) {
         // get the first line, insert into that
+        const firstLine = field.children()[0]
+        if (!firstLine) {
+          // TODO: handle this
+        } else {
+          firstLine.append(text)
+        }
       } else if (leftValue.c === '\n') {
         // insert at beginning of line
+        leftNode.append(text)
       } else if (leftValue) {
         // insert after left node
+        text.appendAfter(leftNode)
       }
     }
 
