@@ -2,14 +2,13 @@
 
 /* eslint-env mocha */
 
-const CRDT = require('delta-crdts')
 const assert = require('assert').strict
 
 const jsdom = require('jsdom')
 const { JSDOM } = jsdom
 const jquery = require('jquery')
 
-const RGA = CRDT('rga')
+const { crdtType: RGA, mergeDeltas } = require('../src/crdt')
 const {join, makeDelta} = require('../src/client/crdtDom')
 
 function _ (html) {
@@ -59,6 +58,17 @@ describe('crdt join', () => {
 
       join($, field, crdt.push({a: 'test', c: '\n'}))
       join($, field, crdt.push({a: 'test', c: 'hello'}))
+    },
+    outHtml: '<div data-nodeid="kgGkam9pbg=="><span data-nodeid="kgKkam9pbg==" data-author="test" style="background: rgba(169, 74, 143, 0.16);">hello</span></div>'
+  })
+
+  t({
+    name: 'can process a merged push join line and text',
+    exec: ({ field, $ }) => {
+      const crdt = RGA('join')
+      const delta = mergeDeltas([crdt.push({a: 'test', c: '\n'}), crdt.push({a: 'test', c: 'hello'})])
+
+      join($, field, delta)
     },
     outHtml: '<div data-nodeid="kgGkam9pbg=="><span data-nodeid="kgKkam9pbg==" data-author="test" style="background: rgba(169, 74, 143, 0.16);">hello</span></div>'
   })
