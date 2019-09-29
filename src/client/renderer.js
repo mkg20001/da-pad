@@ -9,14 +9,25 @@ require('./onchange-plugin')($)
 
 const KEEP_CURSORS = 10 * 1000 // keep un-updated cursor for 10s
 
-function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
-  const field = $(htmlField)
+const STATE = [
+  ['grey', 'Offline'],
+  ['yellow', 'Syncing...'],
+  ['Green', 'Online']
+]
+
+function Renderer ({htmlField: id}, authorId, {onDelta, onCursorChange}) {
+  const main = $(id)
   const cursors = {}
 
-  field.toggleClass('da-pad')
-  field.attr('contenteditable', true)
-  field.wysiwygEvt()
+  main.toggleClass('da-pad')
 
+  const state = $('<div class="da-state"><div class="da-bulb"></div>Loading...</div>')
+  state.appendTo(main)
+
+  const field = $('<div class="da-contents"></div>')
+  field.appendTo(main)
+
+  field.wysiwygEvt()
   field.on('change', () => {
     const delta = makeDelta()
     if (delta) {
@@ -56,7 +67,23 @@ function Renderer ({htmlField}, crdt, authorId, {onDelta, onCursorChange}) {
       renderCursors()
     },
     onChange: (delta) => {
-      join(field, delta)
+      join($, field, delta)
+    },
+    onConnectionStatusChange: (_state, safeToEdit) => {
+      // state: 0=offline, 1=syncing, 2=online/up-to-date
+      // safeToEdit: when loading a pad for the first time, it's not safe to edit until the first change comes in
+
+      const [color, text] = STATE[_state]
+
+      // TODO: make smarter
+      state.removeClass('da-s-grey')
+      state.removeClass('da-s-yellow')
+      state.removeClass('da-s-green')
+      state.addClass('da-s-' + color)
+
+      state.text(text)
+
+      field.attr('contenteditable', safeToEdit)
     }
   }
 }

@@ -18,7 +18,7 @@ const SyncController = require('./sync')
 module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
   const crdt = crdtType(padId)
 
-  const renderer = Renderer(_renderer, crdt, authorId, {
+  const renderer = Renderer(_renderer, authorId, {
     onDelta: (delta) => {
       sync.send.delta(delta)
     },
@@ -30,15 +30,12 @@ module.exports = async ({authorId, padId}, _renderer, _sync, storage) => {
   const sync = await SyncController(_sync, storage, crdtType, padId, {
     onDelta: (delta) => { // NOTE: this is main()! this will yield the initial deltas as well.
       crdt.apply(delta)
-      renderer.onChange()
+      renderer.onChange(delta)
     },
     onCursor: (data) => {
       renderer.onCursor(data)
     },
     onConnectionStatusChange: (state, safeToEdit) => {
-      // TODO: add
-      // state: 0=offline, 1=syncing, 2=online/up-to-date
-      // safeToEdit: when loading a pad for the first time, it's not safe to edit until the first change comes in
       renderer.onConnectionStatus(state, safeToEdit)
     }
   })

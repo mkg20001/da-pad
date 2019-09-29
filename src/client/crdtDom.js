@@ -92,6 +92,7 @@ function join ($, field, delta, options = {}) { // eslint-disable-line complexit
 
   // added
 
+  // remove DOM nodes of removed verticles
   delta[1].forEach(verticle => {
     const value = added.get(verticle)
     const node = storage.shadowMap[verticle]
@@ -207,6 +208,11 @@ function join ($, field, delta, options = {}) { // eslint-disable-line complexit
   }
 }
 
+// own
+function makeDelta ($, delta) {
+
+}
+
 // from RGA src
 function compareIds (_id1, _id2) {
   const id1 = decode(Buffer.from(_id1, 'base64'))
@@ -238,4 +244,4 @@ function compareIds (_id1, _id2) {
   return comparison
 }
 
-module.exports = {join}
+module.exports = { join, makeDelta }

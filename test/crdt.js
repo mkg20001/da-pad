@@ -18,13 +18,19 @@ function _ (html) {
   return { dom, field, $ }
 }
 
-function t ({ name, html, exec, outHtml }) {
+function t ({ name, html, exec, outHtml, outDelta }) {
   it(name, async () => {
     const { dom, field, $ } = _(html)
 
     await exec({ dom, field, $ })
 
-    assert.deepEqual(outHtml, field.html())
+    if (outHtml != null) {
+      assert.deepEqual(outHtml, field.html())
+    }
+
+    if (outDelta != null) {
+      assert.deepEqual(outDelta, makeDelta($, field))
+    }
   })
 }
 
@@ -84,5 +90,14 @@ describe('crdt join', () => {
       join($, field, crdt.removeAt(0))
     },
     outHtml: ''
+  })
+})
+
+describe('crdt delta', () => {
+  t({
+    name: 'can process an line addition',
+    html: '<body><div id="dapad"><div>test</div></div></body>',
+    exec: () => {},
+    outDelta: {}
   })
 })

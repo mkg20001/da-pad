@@ -1,12 +1,62 @@
 .da-pad {
+  font-family: sans-serif;
+  color: white;
+  font-size: 1em;
+  background: #2f2f2f;
+}
+
+.da-pad .da-contents {
   font-family: monospace;
   font-size: 16px;
-  background: #2f2f2f;
   color: #afafaf;
   padding: .5em;
 }
 
-.da-pad .cursor {
+.da-pad .da-state {
+  position: fixed;
+  right: 0;
+  margin: 1em;
+  border-radius: 6px;
+  background: #afafaf;
+  padding: .32em .64em;
+}
+
+.da-pad .da-state .da-bulb {
+  display: inline-block;
+  background: #fff;
+  min-width: 16px;
+  min-height: 16px;
+  width: 16px;
+  height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+  border-radius: 50%;
+  margin-right: 4px;
+  margin-bottom: -2px;
+}
+
+.da-state.da-s-grey {
+  color: grey;
+}
+.da-state.da-s-grey > .da-bulb {
+  background: grey;
+}
+
+.da-state.da-s-yellow {
+  color: yellow;
+}
+.da-state.da-s-yellow > .da-bulb {
+  background: yellow;
+}
+
+.da-state.da-s-green {
+  color: green;
+}
+.da-state.da-s-green > .da-bulb {
+  background: green;
+}
+
+.da-pad .da-cursor {
   min-width: 2px;
   max-width: 2px;
   height: 2px;
