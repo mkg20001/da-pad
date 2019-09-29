@@ -172,7 +172,7 @@ function join ($, field, delta, options = {}) { // eslint-disable-line complexit
         field.append(line)
       } else if (leftValue.c === '\n') {
         // insert after left line
-        line.appendAfter(leftNode)
+        line.insertAfter(leftNode)
       } else if (leftValue) {
         // insert after line of left node
         line.insertAfter(leftNode.parent())
@@ -198,7 +198,7 @@ function join ($, field, delta, options = {}) { // eslint-disable-line complexit
         leftNode.append(text)
       } else if (leftValue) {
         // insert after left node
-        text.appendAfter(leftNode)
+        text.insertAfter(leftNode)
       }
     }
 

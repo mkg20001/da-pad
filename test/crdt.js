@@ -111,6 +111,7 @@ describe('crdt delta', () => {
         ['kgOkam9pbg==', 'kgSkam9pbg==']
       ]),
       new Set()
-    ]
+    ],
+    outHtml: '<div data-nodeid="kgGkam9pbg=="><span data-nodeid="kgKkam9pbg==" data-author="test" style="background: rgba(169, 74, 143, 0.16);">hello</span></div><div data-nodeid="kgOkam9pbg=="><span data-nodeid="kgSkam9pbg==" data-author="test" style="background: rgba(169, 74, 143, 0.16);">test</span></div>'
   })
 })
