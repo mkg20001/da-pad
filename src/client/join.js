@@ -4,6 +4,9 @@ const { mergeDeltas } = require('../crdt')
 const crypto = require('crypto')
 const genNodeId = () => crypto.randomBytes(8).toString('hex')
 
+const assert = require('assert')
+const { encode, decode } = require('delta-crdts-msgpack-codec')
+
 const SHADOW = Symbol('CRDT_SHADOW_ID')
 const STORAGE = Symbol('CRDT_STORAGE')
 
@@ -16,6 +19,7 @@ const STORAGE = Symbol('CRDT_STORAGE')
 //
 // As defined in http://hal.upmc.fr/inria-00555588/document
 
+// from RGA src, adapated to directly work on dom
 function join (field, delta, options = {}) {
   const storage = field[STORAGE] = field[STORAGE] || {
     c: [
@@ -84,7 +88,7 @@ function join (field, delta, options = {}) {
 
   storage.c = [added, removed, resultEdges, unmergedEdges]
 
-  function insertEdge (edge) {
+  function insertEdge (edge) { // here we render dom nodes
     let [leftEdge, newKey] = edge
 
     let right = resultEdges.get(leftEdge) || null
@@ -98,9 +102,46 @@ function join (field, delta, options = {}) {
       right = resultEdges.get(right) || null
     }
 
+    let leftNode = field
+
+    if (leftEdge) {
+      leftNode = storage.shadowMap[leftEdge]
+    }
+
     resultEdges.set(leftEdge, newKey)
     resultEdges.set(newKey, right)
   }
+}
+
+// from RGA src
+function compareIds (_id1, _id2) {
+  const id1 = decode(Buffer.from(_id1, 'base64'))
+  const id2 = decode(Buffer.from(_id2, 'base64'))
+  const [pos1] = id1
+  const [pos2] = id2
+  let comparison = 0
+
+  if (pos1 < pos2) {
+    comparison = -1
+  } else if (pos1 > pos2) {
+    comparison = 1
+  } else {
+    const [, nodeId1] = id1
+    const [, nodeId2] = id2
+    if (typeof nodeId1 === 'object' || typeof nodeId2 === 'object') {
+      // Buffer has a .compare() method
+      assert(nodeId1.compare, 'object comparison needs compare method')
+      comparison = nodeId1.compare(nodeId2)
+    } else {
+      if (nodeId1 < nodeId2) {
+        comparison = -1
+      } else if (nodeId1 > nodeId2) {
+        comparison = 1
+      }
+    }
+  }
+
+  return comparison
 }
 
 module.exports = {join}
