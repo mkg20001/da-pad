@@ -122,6 +122,7 @@ async function SyncController ({padServer, serverAuth}, {get, set}, crdtType, pa
     if (!lastSyncDeltaId || !lastSyncState) {
       onConnectionStatusChange(1, false)
       await doCompleteSync()
+      onConnectionStatusChange(2, true)
     } else {
       onDelta(mergeDeltas([lastSyncState].concat(unsyncedState.map(s => s.delta).filter(Boolean))))
       onConnectionStatusChange(1, true)

@@ -10,6 +10,7 @@
   font-size: 16px;
   color: #afafaf;
   padding: .5em;
+  height: calc(100% - 1em);
 }
 
 .da-pad .da-state {
@@ -50,10 +51,10 @@
 }
 
 .da-state.da-s-green {
-  color: green;
+  color: rgb(39, 161, 33);
 }
 .da-state.da-s-green > .da-bulb {
-  background: green;
+  background: rgb(46, 219, 37);
 }
 
 .da-pad .da-cursor {

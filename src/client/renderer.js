@@ -21,7 +21,7 @@ function Renderer ({htmlField: id}, authorId, {onDelta, onCursorChange}) {
 
   main.toggleClass('da-pad')
 
-  const state = $('<div class="da-state"><div class="da-bulb"></div></div>')
+  const state = $('<div class="da-state da-s-grey"><div class="da-bulb"></div></div>')
   state.appendTo(main)
   const stateText = $('<span>Loading...</span>')
   stateText.appendTo(state)
