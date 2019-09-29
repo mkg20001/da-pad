@@ -17,7 +17,7 @@ function _ (html) {
 }
 
 describe('crdt join', () => {
-  it('can process a join', () => {
+  it('can process a join', async () => {
     const { dom, field, $ } = _()
     const crdt = RGA('join')
 
@@ -25,6 +25,6 @@ describe('crdt join', () => {
 
     join(field, delta)
 
-    console.log(field.html())
+    console.log('HTML', field.html())
   })
 })

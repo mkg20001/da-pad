@@ -17,21 +17,26 @@ const STORAGE = Symbol('CRDT_STORAGE')
 // As defined in http://hal.upmc.fr/inria-00555588/document
 
 function join (field, delta, options = {}) {
-  const storage = field[STORAGE] = field[STORAGE] || {c: [
-    new Map([[null, null]]), // VA
-    new Set(), // VR
-    new Map([[null, null]]), // E
-    new Set() // UE
-  ]}
+  const storage = field[STORAGE] = field[STORAGE] || {
+    c: [
+      new Map([[null, null]]), // VA
+      new Set(), // VR
+      new Map([[null, null]]), // E
+      new Set() // UE
+    ],
+    shoadowMap: {}
+  }
+
+  // TODO: read some values directly from dom?
 
   const added = new Map([...storage.c[0], ...delta[0]])
-  const removed = new Set([...s1[1], ...s2[1]])
+  const removed = new Set([...storage.c[1], ...delta[1]])
 
-  const s1Edges = s1[2]
-  const s2Edges = s2[2]
+  const s1Edges = storage.c[2]
+  const s2Edges = delta[2]
   const resultEdges = new Map(s1Edges)
 
-  const unmergedEdges = new Set([...(s1[3] || new Set()), ...(s2[3] || new Set())])
+  const unmergedEdges = new Set([...(storage.c[3] || new Set()), ...(delta[3] || new Set())])
 
   const edgesToAdd = new Map(s2Edges)
 
@@ -77,7 +82,7 @@ function join (field, delta, options = {}) {
     } while (progress)
   }
 
-  return [added, removed, resultEdges, unmergedEdges]
+  storage.c = [added, removed, resultEdges, unmergedEdges]
 
   function insertEdge (edge) {
     let [leftEdge, newKey] = edge
